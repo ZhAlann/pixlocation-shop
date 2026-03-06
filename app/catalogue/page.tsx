@@ -1,7 +1,7 @@
-export default function Page() {
+export default function CataloguePage() {
     return (
-        <div className="p-10">
+        <main className="p-10">
             <h1 className="text-3xl font-bold">Catalogue</h1>
-        </div>
+        </main>
     );
 }

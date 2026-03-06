@@ -1,7 +1,7 @@
-export default function Page() {
+export default function CartPage() {
     return (
-        <div className="p-10">
-            <h1 className="text-3xl font-bold">Catalogue</h1>
-        </div>
+        <main className="p-10">
+            <h1 className="text-3xl font-bold">Panier</h1>
+        </main>
     );
 }

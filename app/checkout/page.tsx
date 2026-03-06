@@ -1,7 +1,7 @@
-export default function Page() {
+export default function CheckoutPage() {
     return (
-        <div className="p-10">
+        <main className="p-10">
             <h1 className="text-3xl font-bold">Checkout</h1>
-        </div>
+        </main>
     );
 }

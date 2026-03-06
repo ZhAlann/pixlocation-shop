@@ -1,7 +1,7 @@
-export default function Page() {
+export default function SuccessPage() {
     return (
-        <div className="p-10">
-            <h1 className="text-3xl font-bold">Success</h1>
-        </div>
+        <main className="p-10">
+            <h1 className="text-3xl font-bold">Paiement réussi</h1>
+        </main>
     );
 }
