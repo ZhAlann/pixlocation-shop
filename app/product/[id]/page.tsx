@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
-import { products } from "@/data/products";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import AddToCartButton from "@/components/AddToCartButton";
+
 type ProductPageProps = {
     params: Promise<{
         id: string;
@@ -10,21 +11,38 @@ type ProductPageProps = {
 export default async function ProductPage({ params }: ProductPageProps) {
     const { id } = await params;
 
-    const product = products.find((item) => item.id === id);
+    const ref = doc(db, "products", id);
+    const snap = await getDoc(ref);
 
-    if (!product) {
-        notFound();
+    if (!snap.exists()) {
+        return (
+            <main className="p-10">
+                <p>Produit introuvable</p>
+            </main>
+        );
     }
+
+    const product = { id: snap.id, ...snap.data() };
 
     return (
         <main className="p-10">
-            <h1 className="mb-4 text-3xl font-bold">{product.name}</h1>
-            <p className="mb-4 text-gray-600">{product.description}</p>
-            <p className="mb-2">Prix : {product.price} €</p>
-            <p className="mb-2">Stock : {product.stock}</p>
-            <p className="mb-6">État : {product.condition}</p>
+            <h1 className="text-3xl font-bold">{product.name}</h1>
 
-            <AddToCartButton product={product} />
+            {product.imageUrl && (
+                <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="my-6 w-full max-w-xl rounded"
+                />
+            )}
+
+            <p>{product.description}</p>
+
+            <p className="mt-4 text-xl font-semibold">{product.price} €</p>
+
+            <div className="mt-6">
+                <AddToCartButton product={product} />
+            </div>
         </main>
     );
 }

@@ -1,37 +1,22 @@
-"use client";
-
-import { useMemo, useState } from "react";
+import { getProducts } from "@/lib/products";
 import ProductCard from "@/components/ProductCard";
-import FilterBar from "@/components/FilterBar";
-import { products } from "@/data/products";
 
-export default function CataloguePage() {
-    const [selectedFilter, setSelectedFilter] = useState("tous");
-
-    const filteredProducts = useMemo(() => {
-        if (selectedFilter === "tous") {
-            return products;
-        }
-
-        return products.filter(
-            (product) => product.condition === selectedFilter
-        );
-    }, [selectedFilter]);
+export default async function CataloguePage() {
+    const products = await getProducts();
 
     return (
         <main className="p-10">
-            <h1 className="mb-6 text-3xl font-bold">Catalogue</h1>
+            <h1 className="mb-8 text-3xl font-bold">Catalogue</h1>
 
-            <FilterBar
-                selected={selectedFilter}
-                onChange={setSelectedFilter}
-            />
-
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                ))}
-            </div>
+            {products.length === 0 ? (
+                <p>Aucun produit disponible.</p>
+            ) : (
+                <div className="grid gap-6 md:grid-cols-3">
+                    {products.map((product: any) => (
+                        <ProductCard key={product.id} product={product} />
+                    ))}
+                </div>
+            )}
         </main>
     );
 }
