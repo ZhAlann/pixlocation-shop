@@ -22,7 +22,18 @@ export default async function ProductPage({ params }: ProductPageProps) {
         );
     }
 
-    const product = { id: snap.id, ...snap.data() };
+    const data = snap.data();
+
+    const product = {
+        id: snap.id,
+        name: data.name ?? "",
+        description: data.description ?? "",
+        price: data.price ?? 0,
+        stock: data.stock ?? 0,
+        imageUrl: data.imageUrl ?? "",
+        condition: data.condition ?? "neuf",
+        category: data.category ?? "camera",
+    };
 
     return (
         <main className="p-10">
