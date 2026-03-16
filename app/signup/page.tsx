@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
-
+import { getFirebaseAuthErrorMessage } from "@/lib/authErrors";
 export default function SignupPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -22,7 +22,7 @@ export default function SignupPage() {
             router.push("/");
         } catch (error: any) {
             console.error(error);
-            setMessage(error.message || "Erreur lors de l'inscription.");
+            setMessage(getFirebaseAuthErrorMessage(error.code));
         }
     };
 
@@ -61,7 +61,11 @@ export default function SignupPage() {
                 </button>
             </form>
 
-            {message && <p className="mt-4">{message}</p>}
+            {message && (
+                <p className="mt-4 rounded border border-red-500 bg-red-950 px-4 py-3 text-red-300">
+                    {message}
+                </p>
+            )}
         </main>
     );
 }

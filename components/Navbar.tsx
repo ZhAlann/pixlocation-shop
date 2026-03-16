@@ -59,6 +59,9 @@ export default function Navbar() {
                         </>
                     ) : (
                         <>
+                            <Link href="/mon-compte" className="hover:underline">
+                                Mon compte
+                            </Link>
                             <span className="text-sm text-gray-300">{user.email}</span>
 
                             <button onClick={handleLogout} className="hover:underline">
@@ -70,6 +73,7 @@ export default function Navbar() {
                     <Link href="/admin/products" className="hover:underline">
                         Admin
                     </Link>
+
                 </div>
             </nav>
         </header>
