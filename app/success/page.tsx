@@ -5,6 +5,10 @@ import { onAuthStateChanged } from "firebase/auth";
 import { createOrder } from "@/lib/orders";
 import { getCart, clearCart } from "@/lib/cart";
 import { auth } from "@/lib/firebase";
+import {
+    getShippingData,
+    clearShippingData,
+} from "@/lib/checkoutStorage";
 
 export default function SuccessPage() {
     const [message, setMessage] = useState("Enregistrement de la commande...");
@@ -24,15 +28,20 @@ export default function SuccessPage() {
                     0
                 );
 
+                const shipping = getShippingData();
+
                 await createOrder({
                     userId: user?.uid || null,
                     customerEmail: user?.email || "client@pixlocation.com",
                     items: cart,
                     amount: total,
                     status: "paid",
+                    shipping: shipping || null,
                 });
 
                 clearCart();
+                clearShippingData();
+
                 setMessage("Commande enregistrée avec succès.");
             } catch (error) {
                 console.error(error);

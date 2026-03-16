@@ -1,20 +1,38 @@
 "use client";
 
 import { CartItem } from "@/lib/cart";
+import { saveShippingData } from "@/lib/checkoutStorage";
 
 type CheckoutButtonProps = {
     cart: CartItem[];
+    shippingData: {
+        firstName: string;
+        lastName: string;
+        address: string;
+        city: string;
+        postalCode: string;
+        country: string;
+        phone: string;
+    };
 };
 
-export default function CheckoutButton({ cart }: CheckoutButtonProps) {
+export default function CheckoutButton({
+    cart,
+    shippingData,
+}: CheckoutButtonProps) {
     const handleCheckout = async () => {
         try {
+            saveShippingData(shippingData);
+
             const response = await fetch("/api/checkout", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ items: cart }),
+                body: JSON.stringify({
+                    items: cart,
+                    shippingData,
+                }),
             });
 
             const data = await response.json();

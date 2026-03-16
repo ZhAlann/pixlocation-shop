@@ -7,6 +7,7 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
         const items = body.items;
+        const shippingData = body.shippingData;
 
         if (!items || !Array.isArray(items) || items.length === 0) {
             return NextResponse.json(
@@ -29,6 +30,14 @@ export async function POST(req: Request) {
                 },
                 quantity: item.quantity,
             })),
+            metadata: {
+                firstName: shippingData?.firstName || "",
+                lastName: shippingData?.lastName || "",
+                city: shippingData?.city || "",
+                postalCode: shippingData?.postalCode || "",
+                country: shippingData?.country || "",
+                phone: shippingData?.phone || "",
+            },
             success_url: `${req.headers.get("origin")}/success`,
             cancel_url: `${req.headers.get("origin")}/cancel`,
         });

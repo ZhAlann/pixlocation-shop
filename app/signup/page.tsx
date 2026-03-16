@@ -5,6 +5,8 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { getFirebaseAuthErrorMessage } from "@/lib/authErrors";
+import { createUserProfile } from "@/lib/users";
+
 export default function SignupPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -15,7 +17,12 @@ export default function SignupPage() {
         e.preventDefault();
 
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+            await createUserProfile(userCredential.user.uid, email);
             setMessage("Compte créé avec succès.");
             setEmail("");
             setPassword("");

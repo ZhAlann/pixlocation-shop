@@ -37,11 +37,15 @@ export default function CartPage() {
                             />
                         ))}
                     </div>
-
                     <div className="rounded-lg border p-6">
                         <p className="mb-4 text-xl font-bold">Total : {total} €</p>
 
-                        <CheckoutButton cart={cart} />
+                        <Link
+                            href="/confirmation"
+                            className="inline-block rounded bg-black px-6 py-3 text-white"
+                        >
+                            Confirmer la commande
+                        </Link>
                     </div>
                 </>
             )}
