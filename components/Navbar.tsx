@@ -4,20 +4,29 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getCart } from "@/lib/cart";
 import { auth } from "@/lib/firebase";
+import { getUser } from "@/lib/users";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
 
 export default function Navbar() {
     const [cartCount, setCartCount] = useState(0);
     const [user, setUser] = useState<User | null>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
         const cart = getCart();
-
         const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
         setCartCount(totalItems);
 
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
+
+            if (!currentUser) {
+                setIsAdmin(false);
+                return;
+            }
+
+            const profile: any = await getUser(currentUser.uid);
+            setIsAdmin(profile?.role === "admin");
         });
 
         return () => unsubscribe();
@@ -26,6 +35,7 @@ export default function Navbar() {
     const handleLogout = async () => {
         try {
             await signOut(auth);
+            setIsAdmin(false);
         } catch (error) {
             console.error("Erreur lors de la déconnexion :", error);
         }
@@ -62,7 +72,11 @@ export default function Navbar() {
                             <Link href="/mon-compte" className="hover:underline">
                                 Mon compte
                             </Link>
-                            <Link href="/profil">Profil</Link>
+
+                            <Link href="/profil" className="hover:underline">
+                                Profil
+                            </Link>
+
                             <span className="text-sm text-gray-300">{user.email}</span>
 
                             <button onClick={handleLogout} className="hover:underline">
@@ -71,10 +85,11 @@ export default function Navbar() {
                         </>
                     )}
 
-                    <Link href="/admin/products" className="hover:underline">
-                        Admin
-                    </Link>
-
+                    {isAdmin && (
+                        <Link href="/admin/products" className="hover:underline">
+                            Admin
+                        </Link>
+                    )}
                 </div>
             </nav>
         </header>

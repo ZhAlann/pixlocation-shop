@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { getUser } from "@/lib/users";
 import {
     createProduct,
     deleteProduct,
@@ -9,6 +12,7 @@ import {
 } from "@/lib/products";
 
 export default function AdminProductsPage() {
+    const [allowed, setAllowed] = useState<boolean | null>(null);
     const [products, setProducts] = useState<any[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -28,7 +32,23 @@ export default function AdminProductsPage() {
     };
 
     useEffect(() => {
-        loadProducts();
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                setAllowed(false);
+                return;
+            }
+
+            const profile: any = await getUser(user.uid);
+
+            if (profile?.role === "admin") {
+                setAllowed(true);
+                await loadProducts();
+            } else {
+                setAllowed(false);
+            }
+        });
+
+        return () => unsubscribe();
     }, []);
 
     const resetForm = () => {
@@ -70,7 +90,7 @@ export default function AdminProductsPage() {
         }
 
         resetForm();
-        loadProducts();
+        await loadProducts();
     };
 
     const handleEdit = (product: any) => {
@@ -88,14 +108,30 @@ export default function AdminProductsPage() {
 
     const handleDelete = async (productId: string) => {
         await deleteProduct(productId);
-        loadProducts();
+        await loadProducts();
     };
+
+    if (allowed === null) {
+        return (
+            <main className="p-10">
+                <p>Chargement...</p>
+            </main>
+        );
+    }
+
+    if (!allowed) {
+        return (
+            <main className="p-10">
+                <h1 className="text-2xl font-bold">Accès refusé</h1>
+            </main>
+        );
+    }
 
     return (
         <main className="p-10">
             <h1 className="mb-8 text-3xl font-bold">Admin Produits</h1>
 
-            <form onSubmit={handleSubmit} className="mb-10 grid gap-4 max-w-2xl">
+            <form onSubmit={handleSubmit} className="mb-10 grid max-w-2xl gap-4">
                 <input
                     name="name"
                     placeholder="Nom du produit"
@@ -193,6 +229,7 @@ export default function AdminProductsPage() {
                         <p>Stock : {product.stock}</p>
                         <p>Condition : {product.condition}</p>
                         <p>Catégorie : {product.category}</p>
+
                         {product.imageUrl && (
                             <img
                                 src={product.imageUrl}

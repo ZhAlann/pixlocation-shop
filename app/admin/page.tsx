@@ -1,21 +1,53 @@
-import OrderCard from "@/components/OrderCard";
+"use client";
+
+import { useEffect, useState } from "react";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { getUser } from "@/lib/users";
 import { getOrders } from "@/lib/orders";
+import OrderCard from "@/components/OrderCard";
 
-const ADMIN_EMAIL = "admin@pixlocation.com";
+export default function AdminPage() {
+    const [orders, setOrders] = useState<any[]>([]);
+    const [allowed, setAllowed] = useState<boolean | null>(null);
 
-export default async function AdminPage() {
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                setAllowed(false);
+                return;
+            }
 
-    // protection simple pour éviter accès public en production
-    if (process.env.NODE_ENV === "production") {
+            const profile: any = await getUser(user.uid);
+
+            if (profile?.role === "admin") {
+                setAllowed(true);
+
+                const data = await getOrders();
+                setOrders(data);
+            } else {
+                setAllowed(false);
+            }
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    if (allowed === null) {
         return (
             <main className="p-10">
-                <h1 className="text-3xl font-bold">Accès refusé</h1>
-                <p>Cette page est réservée à l'administration.</p>
+                <p>Chargement...</p>
             </main>
         );
     }
 
-    const orders = await getOrders();
+    if (!allowed) {
+        return (
+            <main className="p-10">
+                <h1 className="text-2xl font-bold">Accès refusé</h1>
+            </main>
+        );
+    }
 
     const totalRevenue = orders.reduce((sum, order) => sum + order.amount, 0);
     const totalOrders = orders.length;
@@ -41,15 +73,11 @@ export default async function AdminPage() {
             <section>
                 <h2 className="mb-4 text-2xl font-semibold">Commandes récentes</h2>
 
-                {orders.length === 0 ? (
-                    <p>Aucune commande enregistrée.</p>
-                ) : (
-                    <div className="grid gap-6">
-                        {orders.map((order) => (
-                            <OrderCard key={order.id} order={order} />
-                        ))}
-                    </div>
-                )}
+                <div className="grid gap-6">
+                    {orders.map((order) => (
+                        <OrderCard key={order.id} order={order} />
+                    ))}
+                </div>
             </section>
         </main>
     );
