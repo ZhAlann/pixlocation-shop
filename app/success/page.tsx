@@ -23,6 +23,11 @@ export default function SuccessPage() {
                     return;
                 }
 
+                if (!user?.uid || !user?.email) {
+                    setMessage("Aucun utilisateur connecté. Commande non enregistrée.");
+                    return;
+                }
+
                 const total = cart.reduce(
                     (sum: number, item: any) => sum + item.product.price * item.quantity,
                     0
@@ -31,8 +36,8 @@ export default function SuccessPage() {
                 const shipping = getShippingData();
 
                 await createOrder({
-                    userId: user?.uid || null,
-                    customerEmail: user?.email || "client@pixlocation.com",
+                    userId: user.uid,
+                    customerEmail: user.email,
                     items: cart,
                     amount: total,
                     status: "paid",

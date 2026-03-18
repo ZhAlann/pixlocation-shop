@@ -1,38 +1,26 @@
 "use client";
 
+import { auth } from "@/lib/firebase";
 import { CartItem } from "@/lib/cart";
-import { saveShippingData } from "@/lib/checkoutStorage";
 
 type CheckoutButtonProps = {
     cart: CartItem[];
-    shippingData: {
-        firstName: string;
-        lastName: string;
-        address: string;
-        city: string;
-        postalCode: string;
-        country: string;
-        phone: string;
-    };
 };
 
-export default function CheckoutButton({
-    cart,
-    shippingData,
-}: CheckoutButtonProps) {
+export default function CheckoutButton({ cart }: CheckoutButtonProps) {
     const handleCheckout = async () => {
-        try {
-            saveShippingData(shippingData);
+        if (!auth.currentUser) {
+            alert("Vous devez être connecté pour passer commande.");
+            return;
+        }
 
+        try {
             const response = await fetch("/api/checkout", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    items: cart,
-                    shippingData,
-                }),
+                body: JSON.stringify({ items: cart }),
             });
 
             const data = await response.json();
@@ -51,7 +39,7 @@ export default function CheckoutButton({
     return (
         <button
             onClick={handleCheckout}
-            className="rounded bg-black px-4 py-2 text-white"
+            className="rounded bg-black px-6 py-3 text-white"
         >
             Passer au paiement
         </button>

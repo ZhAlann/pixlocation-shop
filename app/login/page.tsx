@@ -59,6 +59,9 @@ export default function LoginPage() {
                 >
                     Se connecter
                 </button>
+                <a href="/reset-password" className="text-sm underline">
+                    Mot de passe oublié ?
+                </a>
             </form>
 
             {message && (

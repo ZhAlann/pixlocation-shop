@@ -1,16 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import CartItemCard from "@/components/CartItemCard";
-import { CartItem, getCart, getCartTotal, removeFromCart } from "@/lib/cart";
 import Link from "next/link";
+import { onAuthStateChanged, User } from "firebase/auth";
+
+import CartItemCard from "@/components/CartItemCard";
 import CheckoutButton from "@/components/CheckoutButton";
+import { auth } from "@/lib/firebase";
+import { CartItem, getCart, getCartTotal, removeFromCart } from "@/lib/cart";
 
 export default function CartPage() {
     const [cart, setCart] = useState<CartItem[]>([]);
+    const [user, setUser] = useState<User | null>(null);
 
     useEffect(() => {
         setCart(getCart());
+
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+        });
+
+        return () => unsubscribe();
     }, []);
 
     const handleRemove = (productId: string) => {
@@ -37,15 +47,28 @@ export default function CartPage() {
                             />
                         ))}
                     </div>
-                    <div className="rounded-lg border p-6">
-                        <p className="mb-4 text-xl font-bold">Total : {total} €</p>
 
-                        <Link
-                            href="/confirmation"
-                            className="inline-block rounded bg-black px-6 py-3 text-white"
-                        >
-                            Confirmer la commande
-                        </Link>
+                    <div className="rounded-lg border p-6">
+                        <p className="mb-4 text-xl font-bold">
+                            Total : {total.toLocaleString("fr-FR")} €
+                        </p>
+
+                        {!user && (
+                            <p className="mb-4 text-sm text-yellow-400">
+                                Vous devez être connecté pour finaliser votre commande.
+                            </p>
+                        )}
+
+                        {user ? (
+                            <CheckoutButton cart={cart} />
+                        ) : (
+                            <Link
+                                href="/login"
+                                className="inline-block rounded bg-white px-6 py-3 font-semibold text-black"
+                            >
+                                Se connecter pour commander
+                            </Link>
+                        )}
                     </div>
                 </>
             )}

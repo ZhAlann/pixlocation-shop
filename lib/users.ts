@@ -1,6 +1,5 @@
 import { db } from "@/lib/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-
+import { collection, doc, getDoc, setDoc, updateDoc, getDocs } from "firebase/firestore";
 export async function getUser(uid: string) {
     const ref = doc(db, "users", uid);
     const snap = await getDoc(ref);
@@ -46,4 +45,22 @@ export async function saveUserProfile(uid: string, data: any, email?: string) {
         },
         { merge: true }
     );
+
+}
+export async function getAllUsers() {
+    const snapshot = await getDocs(collection(db, "users"));
+
+    return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+    }));
+}
+
+export async function updateUserRole(uid: string, role: "user" | "admin") {
+    const ref = doc(db, "users", uid);
+
+    await updateDoc(ref, {
+        role,
+        updatedAt: new Date(),
+    });
 }

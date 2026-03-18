@@ -56,7 +56,9 @@ export default function Navbar() {
                     <Link href="/cart" className="hover:underline">
                         Panier ({cartCount})
                     </Link>
-
+                    <Link href="/contact" className="hover:underline">
+                        Contact
+                    </Link>
                     {!user ? (
                         <>
                             <Link href="/login" className="hover:underline">
@@ -84,12 +86,12 @@ export default function Navbar() {
                             </button>
                         </>
                     )}
-
                     {isAdmin && (
-                        <Link href="/admin/products" className="hover:underline">
+                        <Link href="/admin" className="hover:underline">
                             Admin
                         </Link>
                     )}
+
                 </div>
             </nav>
         </header>
