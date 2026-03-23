@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getCart } from "@/lib/cart";
-import { auth } from "@/lib/firebase";
-import { getUser } from "@/lib/users";
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
+
+import { auth } from "@/lib/firebase";
+import { getCart } from "@/lib/cart";
+import { getUser } from "@/lib/users";
 
 export default function Navbar() {
     const [cartCount, setCartCount] = useState(0);
@@ -42,58 +43,81 @@ export default function Navbar() {
     };
 
     return (
-        <header className="border-b border-gray-800">
-            <nav className="mx-auto flex max-w-6xl items-center justify-between p-6">
-                <Link href="/" className="text-xl font-bold">
-                    PixLocation Shop
+        <header className="sticky top-0 z-50 border-b border-slate-200 bg-[#171a2b] text-white shadow-sm">
+            <div className="border-b border-white/10 bg-[#111322]">
+                <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-2 text-xs text-slate-300">
+                    <p>Location & vente de matériel audiovisuel</p>
+                    <div className="flex items-center gap-4">
+                        <Link href="/contact" className="transition hover:text-white">
+                            Contact
+                        </Link>
+                        {!user ? (
+                            <>
+                                <Link href="/login" className="transition hover:text-white">
+                                    Connexion
+                                </Link>
+                                <Link href="/signup" className="transition hover:text-white">
+                                    Inscription
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <span className="hidden text-slate-400 sm:inline">
+                                    {user.email}
+                                </span>
+                                <button onClick={handleLogout} className="transition hover:text-white">
+                                    Déconnexion
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+                <Link href="/" className="flex items-center gap-3">
+                    <div className="rounded-md bg-white px-3 py-1 text-sm font-bold tracking-wide text-[#171a2b]">
+                        PIXSHOP
+                    </div>
+                    <span className="hidden text-sm text-slate-300 md:inline">
+                        just shoot it
+                    </span>
                 </Link>
 
-                <div className="flex items-center gap-6">
-                    <Link href="/catalogue" className="hover:underline">
+                <nav className="hidden items-center gap-8 text-sm font-medium lg:flex">
+                    <Link href="/" className="transition hover:text-slate-300">
+                        Accueil
+                    </Link>
+                    <Link href="/catalogue" className="transition hover:text-slate-300">
                         Catalogue
                     </Link>
-
-                    <Link href="/cart" className="hover:underline">
-                        Panier ({cartCount})
-                    </Link>
-                    <Link href="/contact" className="hover:underline">
+                    <Link href="/contact" className="transition hover:text-slate-300">
                         Contact
                     </Link>
-                    {!user ? (
+                    {user && (
                         <>
-                            <Link href="/login" className="hover:underline">
-                                Connexion
-                            </Link>
-
-                            <Link href="/signup" className="hover:underline">
-                                Inscription
-                            </Link>
-                        </>
-                    ) : (
-                        <>
-                            <Link href="/mon-compte" className="hover:underline">
+                            <Link href="/mon-compte" className="transition hover:text-slate-300">
                                 Mon compte
                             </Link>
 
-                            <Link href="/profil" className="hover:underline">
-                                Profil
-                            </Link>
-
-                            <span className="text-sm text-gray-300">{user.email}</span>
-
-                            <button onClick={handleLogout} className="hover:underline">
-                                Déconnexion
-                            </button>
                         </>
                     )}
                     {isAdmin && (
-                        <Link href="/admin" className="hover:underline">
+                        <Link href="/admin" className="transition hover:text-slate-300">
                             Admin
                         </Link>
                     )}
+                </nav>
 
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/cart"
+                        className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                    >
+                        Panier ({cartCount})
+                    </Link>
                 </div>
-            </nav>
+            </div>
         </header>
     );
 }

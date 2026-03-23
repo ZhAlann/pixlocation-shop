@@ -40,12 +40,10 @@ export async function saveUserProfile(uid: string, data: any, email?: string) {
             postalCode: data.postalCode || "",
             country: data.country || "",
             phone: data.phone || "",
-            role: data.role || "user",
             updatedAt: new Date(),
         },
         { merge: true }
     );
-
 }
 export async function getAllUsers() {
     const snapshot = await getDocs(collection(db, "users"));

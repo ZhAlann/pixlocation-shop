@@ -1,5 +1,5 @@
 "use client";
-
+import { uploadImage } from "@/lib/upload";
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -12,6 +12,7 @@ import {
 } from "@/lib/products";
 
 export default function AdminProductsPage() {
+    const [file, setFile] = useState<File | null>(null);
     const [allowed, setAllowed] = useState<boolean | null>(null);
     const [products, setProducts] = useState<any[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export default function AdminProductsPage() {
             imageUrl: "",
         });
         setEditingId(null);
+        setFile(null);
     };
 
     const handleChange = (
@@ -73,24 +75,36 @@ export default function AdminProductsPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const productData = {
-            name: form.name,
-            description: form.description,
-            price: Number(form.price),
-            stock: Number(form.stock),
-            condition: form.condition,
-            category: form.category,
-            imageUrl: form.imageUrl,
-        };
+        let finalImageUrl = form.imageUrl;
 
-        if (editingId) {
-            await updateProduct(editingId, productData);
-        } else {
-            await createProduct(productData);
+        try {
+            if (file) {
+                finalImageUrl = await uploadImage(file);
+            }
+
+            const productData = {
+                name: form.name,
+                description: form.description,
+                price: Number(form.price),
+                stock: Number(form.stock),
+                condition: form.condition,
+                category: form.category,
+                imageUrl: finalImageUrl,
+            };
+
+            if (editingId) {
+                await updateProduct(editingId, productData);
+            } else {
+                await createProduct(productData);
+            }
+
+            resetForm();
+            setFile(null);
+            await loadProducts();
+        } catch (error) {
+            console.error(error);
+            alert("Erreur lors de l'enregistrement du produit.");
         }
-
-        resetForm();
-        await loadProducts();
     };
 
     const handleEdit = (product: any) => {
@@ -191,7 +205,15 @@ export default function AdminProductsPage() {
                     <option value="micro">micro</option>
                     <option value="accessoire">accessoire</option>
                 </select>
-
+                <div className="space-y-2">
+                    <label className="block text-sm font-medium">Image produit</label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setFile(e.target.files?.[0] || null)}
+                        className="rounded border border-gray-700 bg-black px-4 py-2 text-white"
+                    />
+                </div>
                 <input
                     name="imageUrl"
                     placeholder="URL de l'image"
