@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCart, getCartTotal } from "@/lib/cart";
+import { getCart, getCartTotal, toCheckoutItems } from "@/lib/cart";
 import { saveShippingData } from "@/lib/checkoutStorage";
-
+import { ShippingData } from "@/types/checkout";
+import type { CartItem } from "@/lib/cart";
 export default function CheckoutPage() {
-    const [cart, setCart] = useState<any[]>([]);
+    const [cart, setCart] = useState<CartItem[]>([]);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         setCart(getCart());
@@ -15,17 +17,18 @@ export default function CheckoutPage() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setError("");
 
         const form = new FormData(e.currentTarget);
 
-        const data = {
-            firstName: form.get("firstName"),
-            lastName: form.get("lastName"),
-            email: form.get("email"),
-            address: form.get("address"),
-            city: form.get("city"),
-            zip: form.get("zip"),
-            country: form.get("country"),
+        const data: ShippingData = {
+            firstName: String(form.get("firstName") || ""),
+            lastName: String(form.get("lastName") || ""),
+            email: String(form.get("email") || ""),
+            address: String(form.get("address") || ""),
+            city: String(form.get("city") || ""),
+            postalCode: String(form.get("postalCode") || ""),
+            country: String(form.get("country") || ""),
         };
 
         saveShippingData(data);
@@ -36,7 +39,10 @@ export default function CheckoutPage() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ items: cart }),
+                body: JSON.stringify({
+                    items: toCheckoutItems(cart),
+                    shippingData: data,
+                }),
             });
 
             const result = await response.json();
@@ -44,11 +50,11 @@ export default function CheckoutPage() {
             if (result.url) {
                 window.location.href = result.url;
             } else {
-                alert("Impossible de lancer le paiement.");
+                setError("Impossible de lancer le paiement.");
             }
         } catch (error) {
-            console.error(error);
-            alert("Erreur lors de la redirection vers Stripe.");
+            console.error("Erreur checkout :", error);
+            setError("Erreur lors de la redirection vers Stripe.");
         }
     };
 
@@ -79,6 +85,7 @@ export default function CheckoutPage() {
                             />
                             <input
                                 name="email"
+                                type="email"
                                 placeholder="Email"
                                 required
                                 className="input md:col-span-2"
@@ -96,7 +103,7 @@ export default function CheckoutPage() {
                                 className="input"
                             />
                             <input
-                                name="zip"
+                                name="postalCode"
                                 placeholder="Code postal"
                                 required
                                 className="input"
@@ -116,9 +123,14 @@ export default function CheckoutPage() {
 
                     <div className="space-y-2 text-sm text-slate-600">
                         {cart.map((item) => (
-                            <div key={item.product.id} className="flex justify-between gap-4">
-                                <span>{item.product.name}</span>
-                                <span>{item.product.price} €</span>
+                            <div
+                                key={item.product.id}
+                                className="flex justify-between gap-4"
+                            >
+                                <span>
+                                    {item.product.name} x{item.quantity}
+                                </span>
+                                <span>{item.product.price * item.quantity} €</span>
                             </div>
                         ))}
                     </div>
@@ -126,6 +138,10 @@ export default function CheckoutPage() {
                     <div className="mt-4 border-t pt-4 font-semibold">
                         Total : {total} €
                     </div>
+
+                    {error ? (
+                        <p className="mt-4 text-sm text-red-600">{error}</p>
+                    ) : null}
 
                     <button className="mt-6 w-full rounded-lg bg-[#4a3fb3] py-3 font-semibold text-white">
                         Commander

@@ -7,11 +7,20 @@ export type CartItem = {
     quantity: number;
 };
 
+export type CheckoutCartItem = {
+    productId: string;
+    quantity: number;
+};
+
 export function getCart(): CartItem[] {
     if (typeof window === "undefined") return [];
 
-    const data = localStorage.getItem(CART_KEY);
-    return data ? JSON.parse(data) : [];
+    try {
+        const data = localStorage.getItem(CART_KEY);
+        return data ? (JSON.parse(data) as CartItem[]) : [];
+    } catch {
+        return [];
+    }
 }
 
 export function saveCart(cart: CartItem[]) {
@@ -20,7 +29,6 @@ export function saveCart(cart: CartItem[]) {
 
 export function addToCart(product: Product) {
     const cart = getCart();
-
     const existing = cart.find((item) => item.product.id === product.id);
 
     if (existing) {
@@ -37,12 +45,32 @@ export function removeFromCart(productId: string) {
     saveCart(cart);
 }
 
+export function updateCartQuantity(productId: string, quantity: number) {
+    const cart = getCart()
+        .map((item) =>
+            item.product.id === productId
+                ? { ...item, quantity: Math.max(1, quantity) }
+                : item
+        )
+        .filter((item) => item.quantity > 0);
+
+    saveCart(cart);
+}
+
 export function getCartTotal(cart: CartItem[]) {
     return cart.reduce(
         (total, item) => total + item.product.price * item.quantity,
         0
     );
 }
+
 export function clearCart() {
     localStorage.removeItem(CART_KEY);
+}
+
+export function toCheckoutItems(cart: CartItem[]): CheckoutCartItem[] {
+    return cart.map((item) => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+    }));
 }

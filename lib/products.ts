@@ -8,8 +8,11 @@ import {
     updateDoc,
     getDoc,
 } from "firebase/firestore";
+import { Product } from "@/types/product";
 
-export async function getProducts() {
+type ProductInput = Omit<Product, "id">;
+
+export async function getProducts(): Promise<Product[]> {
     const snapshot = await getDocs(collection(db, "products"));
 
     return snapshot.docs.map((document) => {
@@ -24,14 +27,11 @@ export async function getProducts() {
             condition: data.condition ?? "neuf",
             category: data.category ?? "camera",
             imageUrl: data.imageUrl ?? "",
-            createdAt: data.createdAt?.seconds
-                ? new Date(data.createdAt.seconds * 1000).toISOString()
-                : null,
-        };
+        } as Product;
     });
 }
 
-export async function getProductById(id: string) {
+export async function getProductById(id: string): Promise<Product | null> {
     const docRef = doc(db, "products", id);
     const snapshot = await getDoc(docRef);
 
@@ -48,13 +48,10 @@ export async function getProductById(id: string) {
         condition: data.condition ?? "neuf",
         category: data.category ?? "camera",
         imageUrl: data.imageUrl ?? "",
-        createdAt: data.createdAt?.seconds
-            ? new Date(data.createdAt.seconds * 1000).toISOString()
-            : null,
-    };
+    } as Product;
 }
 
-export async function createProduct(product: any) {
+export async function createProduct(product: ProductInput) {
     const docRef = await addDoc(collection(db, "products"), {
         ...product,
         createdAt: new Date(),
@@ -67,8 +64,9 @@ export async function deleteProduct(productId: string) {
     await deleteDoc(doc(db, "products", productId));
 }
 
-export async function updateProduct(productId: string, product: any) {
+export async function updateProduct(productId: string, product: Partial<ProductInput>) {
     await updateDoc(doc(db, "products", productId), {
         ...product,
+        updatedAt: new Date(),
     });
 }
