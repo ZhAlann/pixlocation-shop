@@ -1,4 +1,5 @@
 "use client";
+
 import { uploadImage } from "@/lib/upload";
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
@@ -10,26 +11,39 @@ import {
     getProducts,
     updateProduct,
 } from "@/lib/products";
+import type { Product, ProductCondition, ProductCategory } from "@/types/product";
+import type { UserProfile } from "@/types/user";
+
+type ProductForm = {
+    name: string;
+    description: string;
+    price: string;
+    stock: string;
+    condition: ProductCondition;
+    category: ProductCategory;
+    imageUrl: string;
+};
+
+const initialForm: ProductForm = {
+    name: "",
+    description: "",
+    price: "",
+    stock: "",
+    condition: "neuf",
+    category: "camera",
+    imageUrl: "",
+};
 
 export default function AdminProductsPage() {
     const [file, setFile] = useState<File | null>(null);
     const [allowed, setAllowed] = useState<boolean | null>(null);
-    const [products, setProducts] = useState<any[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
-
-    const [form, setForm] = useState({
-        name: "",
-        description: "",
-        price: "",
-        stock: "",
-        condition: "neuf",
-        category: "camera",
-        imageUrl: "",
-    });
+    const [form, setForm] = useState<ProductForm>(initialForm);
 
     const loadProducts = async () => {
         const data = await getProducts();
-        setProducts(data as any[]);
+        setProducts(data);
     };
 
     useEffect(() => {
@@ -39,7 +53,7 @@ export default function AdminProductsPage() {
                 return;
             }
 
-            const profile: any = await getUser(user.uid);
+            const profile: UserProfile | null = await getUser(user.uid);
 
             if (profile?.role === "admin") {
                 setAllowed(true);
@@ -53,15 +67,7 @@ export default function AdminProductsPage() {
     }, []);
 
     const resetForm = () => {
-        setForm({
-            name: "",
-            description: "",
-            price: "",
-            stock: "",
-            condition: "neuf",
-            category: "camera",
-            imageUrl: "",
-        });
+        setForm(initialForm);
         setEditingId(null);
         setFile(null);
     };
@@ -69,7 +75,19 @@ export default function AdminProductsPage() {
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
     ) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        setForm((prev) => {
+            if (name === "condition") {
+                return { ...prev, condition: value as ProductCondition };
+            }
+
+            if (name === "category") {
+                return { ...prev, category: value as ProductCategory };
+            }
+
+            return { ...prev, [name]: value };
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -82,7 +100,7 @@ export default function AdminProductsPage() {
                 finalImageUrl = await uploadImage(file);
             }
 
-            const productData = {
+            const productData: Omit<Product, "id"> = {
                 name: form.name,
                 description: form.description,
                 price: Number(form.price),
@@ -99,7 +117,6 @@ export default function AdminProductsPage() {
             }
 
             resetForm();
-            setFile(null);
             await loadProducts();
         } catch (error) {
             console.error(error);
@@ -107,7 +124,7 @@ export default function AdminProductsPage() {
         }
     };
 
-    const handleEdit = (product: any) => {
+    const handleEdit = (product: Product) => {
         setEditingId(product.id);
         setForm({
             name: product.name || "",
@@ -205,6 +222,7 @@ export default function AdminProductsPage() {
                     <option value="micro">micro</option>
                     <option value="accessoire">accessoire</option>
                 </select>
+
                 <div className="space-y-2">
                     <label className="block text-sm font-medium">Image produit</label>
                     <input
@@ -214,6 +232,7 @@ export default function AdminProductsPage() {
                         className="rounded border border-gray-700 bg-black px-4 py-2 text-white"
                     />
                 </div>
+
                 <input
                     name="imageUrl"
                     placeholder="URL de l'image"
