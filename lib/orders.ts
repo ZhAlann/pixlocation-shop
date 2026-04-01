@@ -1,8 +1,7 @@
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, orderBy, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getDocs, orderBy, query } from "firebase/firestore";
 import { Order } from "@/types/order";
-import { where } from "firebase/firestore";
+
 export async function createOrder(order: any) {
     const docRef = await addDoc(collection(db, "orders"), {
         ...order,
@@ -11,6 +10,7 @@ export async function createOrder(order: any) {
 
     return docRef.id;
 }
+
 export async function getOrders(): Promise<Order[]> {
     const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
@@ -20,10 +20,12 @@ export async function getOrders(): Promise<Order[]> {
         ...doc.data(),
     })) as Order[];
 }
-export async function getOrdersByEmail(email: string): Promise<Order[]> {
+
+export async function getOrdersByUserId(userId: string): Promise<Order[]> {
     const q = query(
         collection(db, "orders"),
-        where("customerEmail", "==", email)
+        where("userId", "==", userId),
+        orderBy("createdAt", "desc")
     );
 
     const snapshot = await getDocs(q);
