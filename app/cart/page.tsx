@@ -36,8 +36,6 @@ export default function CartPage() {
                 <p>Votre panier est vide.</p>
             ) : (
                 <div className="grid gap-10 lg:grid-cols-[1fr_350px]">
-
-                    {/* LISTE PRODUITS */}
                     <div className="space-y-4">
                         {cart.map((item) => (
                             <div
@@ -68,8 +66,6 @@ export default function CartPage() {
                             </div>
                         ))}
                     </div>
-
-                    {/* RÉCAP */}
                     <div className="rounded-2xl border bg-white p-6 shadow-sm h-fit text-black">
                         <h2 className="mb-4 text-lg font-semibold">
                             Récapitulatif

@@ -33,9 +33,6 @@ export default function HomePage() {
         <div className="absolute inset-y-0 right-0 hidden w-1/2 bg-gradient-to-l from-[#d9d4f4] to-transparent lg:block" />
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 lg:grid-cols-2 lg:py-24">
           <div className="relative z-10">
-            <span className="mb-4 inline-flex rounded-full bg-[#4a3fb3]/10 px-4 py-2 text-sm font-medium text-[#4a3fb3]">
-              Vente audiovisuelle premium
-            </span>
 
             <h1 className="max-w-xl text-4xl font-bold leading-tight text-[#1c1c24] md:text-5xl">
               Le matériel audiovisuel pensé pour vos productions.
@@ -122,7 +119,7 @@ export default function HomePage() {
             <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-[#4a3fb3]">
               Nos univers
             </p>
-            <h2 className="text-3xl font-bold text-[#1c1c24]">
+            <h2 className="text-3xl font-bold text-grey">
               Explorez le catalogue
             </h2>
           </div>
@@ -152,7 +149,7 @@ export default function HomePage() {
                 href="/catalogue"
                 className="mt-6 inline-flex text-sm font-semibold text-[#4a3fb3] transition hover:text-[#3d3399]"
               >
-                Découvrir →
+                Découvrir
               </Link>
             </article>
           ))}
@@ -205,4 +202,4 @@ export default function HomePage() {
       </section>
     </main>
   );
-}
+} 
