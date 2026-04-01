@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { getCart, getCartTotal, toCheckoutItems } from "@/lib/cart";
-import { saveShippingData } from "@/lib/checkoutStorage";
 import { ShippingData } from "@/types/checkout";
 import type { CartItem } from "@/lib/cart";
 export default function CheckoutPage() {
@@ -30,8 +29,6 @@ export default function CheckoutPage() {
             postalCode: String(form.get("postalCode") || ""),
             country: String(form.get("country") || ""),
         };
-
-        saveShippingData(data);
 
         try {
             const response = await fetch("/api/checkout", {
