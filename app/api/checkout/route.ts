@@ -3,16 +3,18 @@ import Stripe from "stripe";
 import { getProductById } from "@/lib/products";
 import { CheckoutRequestBody } from "@/types/checkout";
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-
-if (!stripeSecretKey) {
-    throw new Error("STRIPE_SECRET_KEY is missing.");
-}
-
-const stripe = new Stripe(stripeSecretKey);
-
 export async function POST(req: Request) {
     try {
+        const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+        if (!stripeSecretKey) {
+            return NextResponse.json(
+                { error: "STRIPE_SECRET_KEY is missing." },
+                { status: 500 }
+            );
+        }
+
+        const stripe = new Stripe(stripeSecretKey);
         const body = (await req.json()) as CheckoutRequestBody;
         const { items, shippingData } = body;
 
@@ -66,7 +68,7 @@ export async function POST(req: Request) {
 
         if (!origin) {
             return NextResponse.json(
-                { error: "Origine de la requête introuvable." },
+                { error: "Origin introuvable." },
                 { status: 400 }
             );
         }
@@ -92,9 +94,7 @@ export async function POST(req: Request) {
     } catch (error) {
         const message =
             error instanceof Error ? error.message : "Unknown checkout error";
-
         console.error("Stripe checkout error:", { message });
-
         return NextResponse.json(
             { error: "Erreur lors de la création de la session Stripe." },
             { status: 500 }

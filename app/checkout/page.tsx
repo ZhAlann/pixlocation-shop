@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { getCart, getCartTotal, toCheckoutItems } from "@/lib/cart";
+import { saveShippingData } from "@/lib/checkoutStorage";
 import { ShippingData } from "@/types/checkout";
 import type { CartItem } from "@/lib/cart";
+
 export default function CheckoutPage() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [error, setError] = useState("");
@@ -31,11 +33,13 @@ export default function CheckoutPage() {
         };
 
         try {
+            // Sauvegarde en localStorage avant redirection Stripe
+            // (la redirection externe fait perdre l'état React)
+            saveShippingData(data);
+
             const response = await fetch("/api/checkout", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     items: toCheckoutItems(cart),
                     shippingData: data,
@@ -68,49 +72,13 @@ export default function CheckoutPage() {
                         <h2 className="mb-4 font-semibold">Informations</h2>
 
                         <div className="grid gap-4 md:grid-cols-2">
-                            <input
-                                name="firstName"
-                                placeholder="Prénom"
-                                required
-                                className="input"
-                            />
-                            <input
-                                name="lastName"
-                                placeholder="Nom"
-                                required
-                                className="input"
-                            />
-                            <input
-                                name="email"
-                                type="email"
-                                placeholder="Email"
-                                required
-                                className="input md:col-span-2"
-                            />
-                            <input
-                                name="address"
-                                placeholder="Adresse"
-                                required
-                                className="input md:col-span-2"
-                            />
-                            <input
-                                name="city"
-                                placeholder="Ville"
-                                required
-                                className="input"
-                            />
-                            <input
-                                name="postalCode"
-                                placeholder="Code postal"
-                                required
-                                className="input"
-                            />
-                            <input
-                                name="country"
-                                placeholder="Pays"
-                                required
-                                className="input md:col-span-2"
-                            />
+                            <input name="firstName" placeholder="Prénom" required className="input" />
+                            <input name="lastName" placeholder="Nom" required className="input" />
+                            <input name="email" type="email" placeholder="Email" required className="input md:col-span-2" />
+                            <input name="address" placeholder="Adresse" required className="input md:col-span-2" />
+                            <input name="city" placeholder="Ville" required className="input" />
+                            <input name="postalCode" placeholder="Code postal" required className="input" />
+                            <input name="country" placeholder="Pays" required className="input md:col-span-2" />
                         </div>
                     </div>
                 </div>
@@ -120,13 +88,8 @@ export default function CheckoutPage() {
 
                     <div className="space-y-2 text-sm text-slate-600">
                         {cart.map((item) => (
-                            <div
-                                key={item.product.id}
-                                className="flex justify-between gap-4"
-                            >
-                                <span>
-                                    {item.product.name} x{item.quantity}
-                                </span>
+                            <div key={item.product.id} className="flex justify-between gap-4">
+                                <span>{item.product.name} x{item.quantity}</span>
                                 <span>{item.product.price * item.quantity} €</span>
                             </div>
                         ))}
@@ -136,9 +99,7 @@ export default function CheckoutPage() {
                         Total : {total} €
                     </div>
 
-                    {error ? (
-                        <p className="mt-4 text-sm text-red-600">{error}</p>
-                    ) : null}
+                    {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
 
                     <button className="mt-6 w-full rounded-lg bg-[#4a3fb3] py-3 font-semibold text-white">
                         Commander
