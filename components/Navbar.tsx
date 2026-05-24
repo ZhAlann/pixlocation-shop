@@ -16,8 +16,12 @@ export default function Navbar() {
     const [search, setSearch] = useState("");
 
     useEffect(() => {
-        const cart = getCart();
-        setCartCount(cart.reduce((t, i) => t + i.quantity, 0));
+        // Lecture panier dans un callback pour éviter setState synchrone dans l'effet
+        const updateCart = () => {
+            const cart = getCart();
+            setCartCount(cart.reduce((t, i) => t + i.quantity, 0));
+        };
+        updateCart();
 
         const unsub = onAuthStateChanged(auth, async (u) => {
             if (!u) { setUser(null); return; }
@@ -45,11 +49,9 @@ export default function Navbar() {
     return (
         <nav className="px-navbar">
             <div className="px-navbar-inner">
-                {/* Logo */}
                 <Link href="/" className="px-logo">PIXSHOP</Link>
                 <span className="px-slogan hidden lg:block">just shoot it</span>
 
-                {/* Nav links — Accueil + Catalogue uniquement */}
                 <div className="px-nav-links hidden md:flex">
                     <Link href="/" className={`px-nav-link ${pathname === "/" ? "active" : ""}`}>
                         Accueil
@@ -64,7 +66,6 @@ export default function Navbar() {
                     )}
                 </div>
 
-                {/* Search */}
                 <form onSubmit={handleSearch} className="hidden lg:block">
                     <input
                         className="px-search"
@@ -74,31 +75,19 @@ export default function Navbar() {
                     />
                 </form>
 
-                {/* Right — Contactez-nous + auth + panier */}
                 <div className="px-nav-right">
-                    {/* Contactez-nous — toujours visible */}
-                    <Link href="/contact" className="hidden md:block">
-                        Contactez-nous
-                    </Link>
+                    <Link href="/contact" className="hidden md:block">Contactez-nous</Link>
 
                     {user ? (
                         <>
-                            <span
-                                className="hidden md:block"
-                                style={{ color: "#c8c8dc", fontSize: 12, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                            >
+                            <span className="hidden md:block" style={{ color: "#c8c8dc", fontSize: 12, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {user.email}
                             </span>
-                            <Link href="/mon-compte" className="hidden md:block">
-                                Mon compte
-                            </Link>
+                            <Link href="/mon-compte" className="hidden md:block">Mon compte</Link>
                             <button
                                 onClick={handleSignOut}
                                 className="hidden md:block"
-                                style={{
-                                    background: "none", border: "none",
-                                    color: "#c8c8dc", fontSize: 12, cursor: "pointer",
-                                }}
+                                style={{ background: "none", border: "none", color: "#c8c8dc", fontSize: 12, cursor: "pointer" }}
                             >
                                 Déconnexion
                             </button>
@@ -110,7 +99,6 @@ export default function Navbar() {
                         </>
                     )}
 
-                    {/* Panier */}
                     <Link href="/cart" className="px-btn-cart">
                         Panier ({cartCount})
                     </Link>

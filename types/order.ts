@@ -1,22 +1,32 @@
+export type OrderStatus = "paid" | "pending" | "cancelled";
+
 export type OrderItem = {
     product: {
         id: string;
         name: string;
-        description: string;
         price: number;
-        stock: number;
         imageUrl: string;
         condition: "neuf" | "occasion";
-        category: "camera" | "objectif" | "micro" | "accessoire";
+        category: string;
     };
     quantity: number;
 };
 
 export type Order = {
     id: string;
+    userId?: string;
     customerEmail: string;
     items: OrderItem[];
     amount: number;
-    status: "paid" | "pending" | "cancelled";
-    createdAt: any;
+    status: OrderStatus;
+    shipping?: {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        address?: string;
+        city?: string;
+        postalCode?: string;
+        country?: string;
+    } | null;
+    createdAt: { toDate?: () => Date } | Date | string | null;
 };

@@ -1,54 +1,46 @@
 import { Order } from "@/types/order";
 
-type OrderCardProps = {
+interface Props {
     order: Order;
-};
+}
 
-export default function OrderCard({ order }: OrderCardProps) {
+export default function OrderCard({ order }: Props) {
+    const statusColor =
+        order.status === "paid"
+            ? { bg: "#e8f5e9", color: "#2e7d32", label: "Payé" }
+            : order.status === "pending"
+                ? { bg: "#fff3e0", color: "#e65100", label: "En cours" }
+                : { bg: "#fce4e4", color: "#c62828", label: "Annulé" };
+
+    const formatDate = (createdAt: Order["createdAt"]) => {
+        if (!createdAt) return "—";
+        try {
+            const d = typeof createdAt === "object" && "toDate" in createdAt && createdAt.toDate
+                ? createdAt.toDate()
+                : new Date(createdAt as string | Date);
+            return d.toLocaleDateString("fr-FR");
+        } catch { return "—"; }
+    };
+
     return (
-        <article className="rounded-lg border p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Commande #{order.id}</h2>
-                <span
-                    className={`rounded px-2 py-1 text-sm text-white ${order.status === "paid"
-                            ? "bg-green-600"
-                            : order.status === "pending"
-                                ? "bg-yellow-600"
-                                : "bg-red-600"
-                        }`}
-                >
-                    {order.status}
-                </span>
+        <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 6, padding: 16, marginBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ fontFamily: "monospace", fontSize: 11, color: "#aaa" }}>#{order.id.slice(0, 8)}</span>
+                <span className="px-badge" style={{ background: statusColor.bg, color: statusColor.color }}>{statusColor.label}</span>
             </div>
-
-            <p className="mb-2">Client : {order.customerEmail}</p>
-            <p className="mb-2">Montant : {order.amount} €</p>
-            <p className="mb-2">Articles : {order.items?.length ?? 0}</p>
-
-            <div className="mt-4">
-                <h3 className="mb-2 font-semibold">Produits :</h3>
-                <ul className="space-y-1 text-sm text-gray-300">
-                    {order.items?.map((item: any, index: number) => {
-                        if (typeof item === "string") {
-                            return <li key={index}>{item}</li>;
-                        }
-
-                        if (item?.product?.name) {
-                            return (
-                                <li key={index}>
-                                    {item.product.name} × {item.quantity}
-                                </li>
-                            );
-                        }
-
-                        return <li key={index}>Produit inconnu</li>;
-                    })}
-
-                </ul>
-                <p className="mb-2">
-                    Date : {new Date(order.createdAt?.seconds ? order.createdAt.seconds * 1000 : order.createdAt).toLocaleString()}
-                </p>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "#e63012", marginBottom: 6 }}>
+                {order.amount?.toLocaleString("fr-FR")} &euro;
             </div>
-        </article>
+            <div style={{ fontSize: 11, color: "#888" }}>{formatDate(order.createdAt)}</div>
+            {(order.items ?? []).length > 0 && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f5f5f5" }}>
+                    {order.items.map((item, i) => (
+                        <div key={i} style={{ fontSize: 12, color: "#555", marginBottom: 3 }}>
+                            {item.product?.name ?? "Produit"} &times; {item.quantity}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
     );
 }
