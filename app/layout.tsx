@@ -1,22 +1,21 @@
-import "./globals.css";
+import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import "./globals.css";
 
-export const metadata = {
-  title: "PixShop",
-  description: "Boutique de matériel audiovisuel neuf et d’occasion",
+export const metadata: Metadata = {
+  title: "PixShop — Matériel audiovisuel neuf & occasion",
+  description: "Boutique de matériel audiovisuel neuf et occasion. Caméras, objectifs, micros, accessoires.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body className="min-h-screen bg-[#f6f6f8] text-[#1c1c24] antialiased">
+      <body style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         <Navbar />
-        <div className="min-h-[calc(100vh-80px)]">{children}</div>
+        <main style={{ flex: 1 }}>
+          {children}
+        </main>
         <Footer />
       </body>
     </html>

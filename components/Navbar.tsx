@@ -1,123 +1,121 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
-
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { getCart } from "@/lib/cart";
 import { getUser } from "@/lib/users";
+import { getCart } from "@/lib/cart";
 
 export default function Navbar() {
+    const pathname = usePathname();
+    const router = useRouter();
+    const [user, setUser] = useState<{ email: string; isAdmin: boolean } | null>(null);
     const [cartCount, setCartCount] = useState(0);
-    const [user, setUser] = useState<User | null>(null);
-    const [isAdmin, setIsAdmin] = useState(false);
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
         const cart = getCart();
-        const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
-        setCartCount(totalItems);
+        setCartCount(cart.reduce((t, i) => t + i.quantity, 0));
 
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            setUser(currentUser);
-
-            if (!currentUser) {
-                setIsAdmin(false);
-                return;
-            }
-
-            const profile: any = await getUser(currentUser.uid);
-            setIsAdmin(profile?.role === "admin");
+        const unsub = onAuthStateChanged(auth, async (u) => {
+            if (!u) { setUser(null); return; }
+            const profile = await getUser(u.uid);
+            setUser({ email: u.email ?? "", isAdmin: profile?.role === "admin" });
         });
-
-        return () => unsubscribe();
+        return () => unsub();
     }, []);
 
-    const handleLogout = async () => {
-        try {
-            await signOut(auth);
-            setIsAdmin(false);
-        } catch (error) {
-            console.error("Erreur lors de la déconnexion :", error);
+    const handleSignOut = async () => {
+        await signOut(auth);
+        router.push("/");
+    };
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (search.trim()) {
+            router.push(`/catalogue?search=${encodeURIComponent(search.trim())}`);
         }
     };
 
+    const isActive = (href: string) =>
+        pathname === href || pathname.startsWith(href + "/");
+
     return (
-        <header className="sticky top-0 z-50 border-b border-slate-200 bg-[#171a2b] text-white shadow-sm">
-            <div className="border-b border-white/10 bg-[#111322]">
-                <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-2 text-xs text-slate-300">
-                    <p>Location & vente de matériel audiovisuel</p>
-                    <div className="flex items-center gap-4">
-                        <Link href="/contact" className="transition hover:text-white">
-                            Contact
-                        </Link>
-                        {!user ? (
-                            <>
-                                <Link href="/login" className="transition hover:text-white">
-                                    Connexion
-                                </Link>
-                                <Link href="/signup" className="transition hover:text-white">
-                                    Inscription
-                                </Link>
-                            </>
-                        ) : (
-                            <>
-                                <span className="hidden text-slate-400 sm:inline">
-                                    {user.email}
-                                </span>
-                                <button onClick={handleLogout} className="transition hover:text-white">
-                                    Déconnexion
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </div>
+        <nav className="px-navbar">
+            <div className="px-navbar-inner">
+                {/* Logo */}
+                <Link href="/" className="px-logo">PIXSHOP</Link>
+                <span className="px-slogan hidden lg:block">just shoot it</span>
 
-            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-                <Link href="/" className="flex items-center gap-3">
-                    <div className="rounded-md bg-white px-3 py-1 text-sm font-bold tracking-wide text-[#171a2b]">
-                        PIXSHOP
-                    </div>
-                    <span className="hidden text-sm text-slate-300 md:inline">
-                        just shoot it
-                    </span>
-                </Link>
-
-                <nav className="hidden items-center gap-8 text-sm font-medium lg:flex">
-                    <Link href="/" className="transition hover:text-slate-300">
+                {/* Nav links — Accueil + Catalogue uniquement */}
+                <div className="px-nav-links hidden md:flex">
+                    <Link href="/" className={`px-nav-link ${pathname === "/" ? "active" : ""}`}>
                         Accueil
                     </Link>
-                    <Link href="/catalogue" className="transition hover:text-slate-300">
+                    <Link href="/catalogue" className={`px-nav-link ${isActive("/catalogue") ? "active" : ""}`}>
                         Catalogue
                     </Link>
-                    <Link href="/contact" className="transition hover:text-slate-300">
-                        Contact
-                    </Link>
-                    {user && (
-                        <>
-                            <Link href="/mon-compte" className="transition hover:text-slate-300">
-                                Mon compte
-                            </Link>
-
-                        </>
-                    )}
-                    {isAdmin && (
-                        <Link href="/admin" className="transition hover:text-slate-300">
-                            Admin
+                    {user?.isAdmin && (
+                        <Link href="/admin" className={`px-nav-link ${isActive("/admin") ? "active" : ""}`}>
+                            Back-office
                         </Link>
                     )}
-                </nav>
+                </div>
 
-                <div className="flex items-center gap-3">
-                    <Link
-                        href="/cart"
-                        className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-                    >
+                {/* Search */}
+                <form onSubmit={handleSearch} className="hidden lg:block">
+                    <input
+                        className="px-search"
+                        placeholder="Rechercher un produit..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </form>
+
+                {/* Right — Contactez-nous + auth + panier */}
+                <div className="px-nav-right">
+                    {/* Contactez-nous — toujours visible */}
+                    <Link href="/contact" className="hidden md:block">
+                        Contactez-nous
+                    </Link>
+
+                    {user ? (
+                        <>
+                            <span
+                                className="hidden md:block"
+                                style={{ color: "#c8c8dc", fontSize: 12, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                            >
+                                {user.email}
+                            </span>
+                            <Link href="/mon-compte" className="hidden md:block">
+                                Mon compte
+                            </Link>
+                            <button
+                                onClick={handleSignOut}
+                                className="hidden md:block"
+                                style={{
+                                    background: "none", border: "none",
+                                    color: "#c8c8dc", fontSize: 12, cursor: "pointer",
+                                }}
+                            >
+                                Déconnexion
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <Link href="/login" className="hidden md:block">Connexion</Link>
+                            <Link href="/signup" className="hidden md:block">Inscription</Link>
+                        </>
+                    )}
+
+                    {/* Panier */}
+                    <Link href="/cart" className="px-btn-cart">
                         Panier ({cartCount})
                     </Link>
                 </div>
             </div>
-        </header>
+        </nav>
     );
 }

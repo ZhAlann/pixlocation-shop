@@ -1,105 +1,169 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { getUser } from "@/lib/users";
 import { getOrders } from "@/lib/orders";
-import OrderCard from "@/components/OrderCard";
+import { Order } from "@/types/order";
+import Link from "next/link";
 
 export default function AdminPage() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [allowed, setAllowed] = useState<boolean | null>(null);
+  const router = useRouter();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        setAllowed(false);
-        return;
-      }
-
-      const profile: any = await getUser(user.uid);
-
-      if (profile?.role === "admin") {
-        setAllowed(true);
-
-        const data = await getOrders();
-        setOrders(data);
-      } else {
-        setAllowed(false);
-      }
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (!u) { router.push("/login"); return; }
+      const p = await getUser(u.uid);
+      if (p?.role !== "admin") { router.push("/"); return; }
+      const o = await getOrders();
+      setOrders(o);
+      setLoading(false);
     });
+    return () => unsub();
+  }, [router]);
 
-    return () => unsubscribe();
-  }, []);
+  const totalRevenu = orders
+    .filter((o) => o.status === "paid")
+    .reduce((s, o) => s + (o.amount ?? 0), 0);
 
-  if (allowed === null) {
-    return (
-      <main className="p-10">
-        <p>Chargement...</p>
-      </main>
-    );
-  }
-
-  if (!allowed) {
-    return (
-      <main className="p-10">
-        <h1 className="text-2xl font-bold">Accès refusé</h1>
-      </main>
-    );
-  }
-
-  const totalRevenue = orders.reduce((sum, order) => sum + order.amount, 0);
-  const totalOrders = orders.length;
+  const statusLabel = (s: string) => {
+    if (s === "paid") return { label: "Payé", bg: "#e8f5e9", color: "#2e7d32" };
+    if (s === "pending") return { label: "En cours", bg: "#fff3e0", color: "#e65100" };
+    return { label: "Annulé", bg: "#fce4e4", color: "#c62828" };
+  };
 
   return (
-    <main className="p-10">
-      <h1 className="mb-8 text-3xl font-bold">Dashboard Admin</h1>
+    <>
+      <div className="px-admin-header">
+        <h1>Dashboard Admin</h1>
+      </div>
 
-      <section className="mb-8 grid gap-6 md:grid-cols-2">
-        <a
-          href="/admin/products"
-          className="rounded-lg border p-6 hover:bg-gray-900 transition"
-        >
-          <h2 className="text-xl font-semibold mb-2">Gestion produits</h2>
-          <p className="text-gray-400">
-            Ajouter, modifier et supprimer les produits
-          </p>
-        </a>
+      <div style={{ background: "#f5f4f0", padding: "24px 32px", minHeight: 500 }}>
+        <div style={{ display: "flex", gap: 24, maxWidth: 1400, margin: "0 auto" }}>
 
-        <a
-          href="/admin/users"
-          className="rounded-lg border p-6 hover:bg-gray-900 transition"
-        >
-          <h2 className="text-xl font-semibold mb-2">Gestion utilisateurs</h2>
-          <p className="text-gray-400">
-            Voir les comptes et gérer les rôles admin
-          </p>
-        </a>
-      </section>
-      <section className="mb-8 grid gap-6 md:grid-cols-2">
-        <div className="rounded-lg border p-6">
-          <h2 className="mb-2 text-lg font-semibold">Nombre de commandes</h2>
-          <p className="text-3xl font-bold">{totalOrders}</p>
+          {/* SIDEBAR */}
+          <aside className="px-admin-sidebar">
+            <Link href="/admin/products" className="px-admin-link">Produit</Link>
+            <Link href="/admin" className="px-admin-link active">Commande</Link>
+            <Link href="/admin/users" className="px-admin-link">Comptes client</Link>
+          </aside>
+
+          {/* CONTENU */}
+          <div style={{ flex: 1 }}>
+
+            {/* Stats rapides */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
+              {[
+                { label: "Total commandes", value: orders.length, color: "#1a1a2e" },
+                { label: "Payées", value: orders.filter((o) => o.status === "paid").length, color: "#2e7d32" },
+                { label: "En cours", value: orders.filter((o) => o.status === "pending").length, color: "#e65100" },
+                { label: "Revenu total", value: `${totalRevenu.toLocaleString("fr-FR")} €`, color: "#e63012" },
+              ].map((s) => (
+                <div key={s.label} style={{
+                  background: "#fff", border: "1px solid #eee",
+                  borderRadius: 6, padding: "16px 20px",
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#888", marginBottom: 8 }}>
+                    {s.label}
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: s.color }}>
+                    {s.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Table commandes */}
+            <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 6, overflow: "hidden" }}>
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0" }}>
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a2e" }}>
+                  Liste des Commandes
+                </h2>
+              </div>
+
+              {loading ? (
+                <div style={{ padding: "48px 32px", textAlign: "center", color: "#888" }}>
+                  Chargement...
+                </div>
+              ) : orders.length === 0 ? (
+                <div style={{ padding: "48px 32px", textAlign: "center", color: "#888" }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>📦</div>
+                  <div style={{ fontSize: 14 }}>Aucune commande pour le moment.</div>
+                </div>
+              ) : (
+                <table className="px-table" style={{ borderRadius: 0, border: "none" }}>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Client</th>
+                      <th>Montant</th>
+                      <th>Statut</th>
+                      <th>Date</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map((order) => {
+                      const s = statusLabel(order.status ?? "pending");
+                      return (
+                        <tr key={order.id}>
+                          {/* ID */}
+                          <td style={{ fontFamily: "monospace", fontSize: 11, color: "#aaa" }}>
+                            #{order.id.slice(0, 8)}
+                          </td>
+
+                          {/* Client */}
+                          <td>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a2e" }}>
+                              {order.customerEmail ?? "—"}
+                            </div>
+                            <div style={{ fontSize: 11, color: "#888" }}>
+                              {order.items?.length ?? 0} article{(order.items?.length ?? 0) > 1 ? "s" : ""}
+                            </div>
+                          </td>
+
+                          {/* Montant */}
+                          <td style={{ fontWeight: 800, fontSize: 14, color: "#e63012" }}>
+                            {order.amount?.toLocaleString("fr-FR")} €
+                          </td>
+
+                          {/* Statut */}
+                          <td>
+                            <span className="px-badge" style={{ background: s.bg, color: s.color, fontSize: 11 }}>
+                              {s.label}
+                            </span>
+                          </td>
+
+                          {/* Date */}
+                          <td style={{ fontSize: 12, color: "#888" }}>
+                            {order.createdAt
+                              ? new Date(order.createdAt?.toDate?.() ?? order.createdAt).toLocaleDateString("fr-FR")
+                              : "—"}
+                          </td>
+
+                          {/* Action */}
+                          <td>
+                            <button
+                              onClick={() => alert(`Commande #${order.id}\nClient : ${order.customerEmail}\nMontant : ${order.amount} €\nStatut : ${order.status}`)}
+                              className="px-btn px-btn-sm px-btn-outline"
+                            >
+                              Voir détail
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
         </div>
-
-        <div className="rounded-lg border p-6">
-          <h2 className="mb-2 text-lg font-semibold">Chiffre d’affaires</h2>
-          <p className="text-3xl font-bold">
-            {totalRevenue.toLocaleString("fr-FR")} €
-          </p>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-4 text-2xl font-semibold">Commandes récentes</h2>
-
-        <div className="grid gap-6">
-          {orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
-          ))}
-        </div>
-      </section>
-    </main>
+      </div>
+    </>
   );
 }

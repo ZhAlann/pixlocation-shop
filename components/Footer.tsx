@@ -2,67 +2,99 @@ import Link from "next/link";
 
 export default function Footer() {
     return (
-        <footer className="mt-20 bg-[#171a2b] text-white">
-            <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-4">
-                <div>
-                    <div className="mb-4 inline-block rounded-md bg-white px-3 py-1 text-sm font-bold tracking-wide text-[#171a2b]">
-                        PIXSHOP
+        <footer>
+            <div className="px-footer">
+                <div className="px-footer-grid">
+                    {/* L'agence */}
+                    <div>
+                        <div className="px-footer-title">L'agence</div>
+                        <p className="px-footer-text">
+                            36, rue Émile Decorps<br />
+                            69100 Villeurbanne<br />
+                            <br />
+                            Horaires d'ouverture<br />
+                            Du lundi au vendredi<br />
+                            09h00–12h00 / 14h00–17h00
+                        </p>
+                        <div className="px-footer-social">
+                            <a
+                                href="https://facebook.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-social-icon"
+                                aria-label="Facebook"
+                            >
+                                f
+                            </a>
+                            <a
+                                href="https://instagram.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-social-icon"
+                                aria-label="Instagram"
+                            >
+                                in
+                            </a>
+                            <a
+                                href="https://youtube.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-social-icon"
+                                aria-label="YouTube"
+                            >
+                                ▶
+                            </a>
+                        </div>
                     </div>
-                    <p className="max-w-xs text-sm leading-6 text-slate-300">
-                        Boutique dédiée à la vente de matériel audiovisuel neuf et d’occasion
-                        pour professionnels et particuliers.
-                    </p>
-                </div>
 
-                <div>
-                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-200">
-                        Navigation
-                    </h3>
-                    <div className="flex flex-col gap-3 text-sm text-slate-300">
-                        <Link href="/" className="transition hover:text-white">
-                            Accueil
-                        </Link>
-                        <Link href="/catalogue" className="transition hover:text-white">
-                            Catalogue
-                        </Link>
-                        <Link href="/contact" className="transition hover:text-white">
-                            Contact
-                        </Link>
-                        <Link href="/mon-compte" className="transition hover:text-white">
-                            Mon compte
-                        </Link>
+                    {/* Mon compte */}
+                    <div>
+                        <div className="px-footer-title">Mon compte</div>
+                        <Link href="/login" className="px-footer-link">Connexion / Inscription</Link>
+                        <Link href="/mon-compte" className="px-footer-link">Mes commandes</Link>
+                        <Link href="/reset-password" className="px-footer-link">Mot de passe oublié</Link>
                     </div>
-                </div>
 
-                <div>
-                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-200">
-                        Informations
-                    </h3>
-                    <div className="space-y-3 text-sm text-slate-300">
-                        <p>26, rue Antoine Devescure</p>
-                        <p>69000 Lyon</p>
-                        <p>contact@pixloc.fr</p>
-                        <p>09 00 00 00 00</p>
+                    {/* Nous contacter */}
+                    <div>
+                        <div className="px-footer-title">Nous contacter</div>
+                        <a href="tel:0428298298" className="px-footer-link">04 28 298 298</a>
+                        <a href="mailto:contact@pixloc.fr" className="px-footer-link">contact@pixloc.fr</a>
+                        <Link href="/contact" className="px-footer-link">Formulaire de contact</Link>
                     </div>
-                </div>
 
-                <div>
-                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-200">
-                        Suivez-nous
-                    </h3>
-                    <div className="space-y-3 text-sm text-slate-300">
-                        <p>Instagram</p>
-                        <p>Facebook</p>
-                        <p>YouTube</p>
+                    {/* Suivez-nous */}
+                    <div>
+                        <div className="px-footer-title">Suivez-nous !</div>
+                        <a
+                            href="https://facebook.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-footer-link"
+                        >
+                            Facebook
+                        </a>
+                        <a
+                            href="https://instagram.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-footer-link"
+                        >
+                            Instagram
+                        </a>
+                        <a
+                            href="https://youtube.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-footer-link"
+                        >
+                            YouTube
+                        </a>
                     </div>
                 </div>
             </div>
-
-            <div className="border-t border-white/10">
-                <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-4 text-xs text-slate-400 md:flex-row md:items-center md:justify-between">
-                    <p>© 2026 PixShop. Tous droits réservés.</p>
-                    <p>Projet e-commerce audiovisuel développé avec Next.js & Firebase.</p>
-                </div>
+            <div className="px-footer-bottom">
+                © 2026 PixShop — Vente de matériel audiovisuel neuf &amp; occasion
             </div>
         </footer>
     );

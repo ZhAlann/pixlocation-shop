@@ -1,302 +1,264 @@
 "use client";
 
-import { uploadImage } from "@/lib/upload";
 import { useEffect, useState } from "react";
-import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { getUser } from "@/lib/users";
-import {
-    createProduct,
-    deleteProduct,
-    getProducts,
-    updateProduct,
-} from "@/lib/products";
-import type { Product, ProductCondition, ProductCategory } from "@/types/product";
-import type { UserProfile } from "@/types/user";
+import { getProducts, createProduct, updateProduct, deleteProduct } from "@/lib/products";
+import { uploadImage } from "@/lib/upload";
+import { Product, ProductCondition, ProductCategory } from "@/types/product";
+import Link from "next/link";
 
-type ProductForm = {
-    name: string;
-    description: string;
-    price: string;
-    stock: string;
-    condition: ProductCondition;
-    category: ProductCategory;
-    imageUrl: string;
-};
-
-const initialForm: ProductForm = {
-    name: "",
-    description: "",
-    price: "",
-    stock: "",
-    condition: "neuf",
-    category: "camera",
-    imageUrl: "",
+const EMPTY: Omit<Product, "id"> = {
+    name: "", description: "", price: 0, stock: 0,
+    imageUrl: "", condition: "neuf", category: "camera",
 };
 
 export default function AdminProductsPage() {
-    const [file, setFile] = useState<File | null>(null);
-    const [allowed, setAllowed] = useState<boolean | null>(null);
+    const router = useRouter();
     const [products, setProducts] = useState<Product[]>([]);
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [form, setForm] = useState<ProductForm>(initialForm);
-
-    const loadProducts = async () => {
-        const data = await getProducts();
-        setProducts(data);
-    };
+    const [form, setForm] = useState<Omit<Product, "id">>(EMPTY);
+    const [editId, setEditId] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [showForm, setShowForm] = useState(false);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                setAllowed(false);
-                return;
-            }
-
-            const profile: UserProfile | null = await getUser(user.uid);
-
-            if (profile?.role === "admin") {
-                setAllowed(true);
-                await loadProducts();
-            } else {
-                setAllowed(false);
-            }
+        const unsub = onAuthStateChanged(auth, async (u) => {
+            if (!u) { router.push("/login"); return; }
+            const p = await getUser(u.uid);
+            if (p?.role !== "admin") { router.push("/"); return; }
+            loadProducts();
         });
+        return () => unsub();
+    }, [router]);
 
-        return () => unsubscribe();
-    }, []);
-
-    const resetForm = () => {
-        setForm(initialForm);
-        setEditingId(null);
-        setFile(null);
+    const loadProducts = async () => {
+        const list = await getProducts();
+        setProducts(list);
     };
 
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-    ) => {
-        const { name, value } = e.target;
+    const set = (field: keyof Omit<Product, "id">) =>
+        (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+            const val = field === "price" || field === "stock" ? Number(e.target.value) : e.target.value;
+            setForm((f) => ({ ...f, [field]: val }));
+        };
 
-        setForm((prev) => {
-            if (name === "condition") {
-                return { ...prev, condition: value as ProductCondition };
-            }
-
-            if (name === "category") {
-                return { ...prev, category: value as ProductCategory };
-            }
-
-            return { ...prev, [name]: value };
-        });
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const url = await uploadImage(file);
+            setForm((f) => ({ ...f, imageUrl: url }));
+        } catch { alert("Erreur upload image"); }
+        finally { setUploading(false); }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        let finalImageUrl = form.imageUrl;
-
+        setLoading(true);
         try {
-            if (file) {
-                finalImageUrl = await uploadImage(file);
-            }
-
-            const productData: Omit<Product, "id"> = {
-                name: form.name,
-                description: form.description,
-                price: Number(form.price),
-                stock: Number(form.stock),
-                condition: form.condition,
-                category: form.category,
-                imageUrl: finalImageUrl,
-            };
-
-            if (editingId) {
-                await updateProduct(editingId, productData);
+            if (editId) {
+                await updateProduct(editId, form);
             } else {
-                await createProduct(productData);
+                await createProduct(form);
             }
-
-            resetForm();
-            await loadProducts();
-        } catch (error) {
-            console.error(error);
-            alert("Erreur lors de l'enregistrement du produit.");
-        }
+            setForm(EMPTY);
+            setEditId(null);
+            setShowForm(false);
+            loadProducts();
+        } finally { setLoading(false); }
     };
 
-    const handleEdit = (product: Product) => {
-        setEditingId(product.id);
-        setForm({
-            name: product.name || "",
-            description: product.description || "",
-            price: String(product.price || ""),
-            stock: String(product.stock || ""),
-            condition: product.condition || "neuf",
-            category: product.category || "camera",
-            imageUrl: product.imageUrl || "",
-        });
+    const handleEdit = (p: Product) => {
+        setForm({ name: p.name, description: p.description, price: p.price, stock: p.stock, imageUrl: p.imageUrl, condition: p.condition, category: p.category });
+        setEditId(p.id);
+        setShowForm(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const handleDelete = async (productId: string) => {
-        await deleteProduct(productId);
-        await loadProducts();
+    const handleDelete = async (id: string) => {
+        if (!confirm("Supprimer ce produit ?")) return;
+        await deleteProduct(id);
+        loadProducts();
     };
 
-    if (allowed === null) {
-        return (
-            <main className="p-10">
-                <p>Chargement...</p>
-            </main>
-        );
-    }
-
-    if (!allowed) {
-        return (
-            <main className="p-10">
-                <h1 className="text-2xl font-bold">Accès refusé</h1>
-            </main>
-        );
-    }
+    const AdminSidebar = () => (
+        <aside className="px-admin-sidebar">
+            <Link href="/admin/products" className="px-admin-link active">Produit</Link>
+            <Link href="/admin" className="px-admin-link">Commande</Link>
+            <Link href="/admin/users" className="px-admin-link">Comptes client</Link>
+        </aside>
+    );
 
     return (
-        <main className="p-10">
-            <h1 className="mb-8 text-3xl font-bold">Admin Produits</h1>
+        <>
+            <div className="px-admin-header">
+                <h1>Dashboard Admin</h1>
+            </div>
 
-            <form onSubmit={handleSubmit} className="mb-10 grid max-w-2xl gap-4">
-                <input
-                    name="name"
-                    placeholder="Nom du produit"
-                    value={form.name}
-                    onChange={handleChange}
-                    className="rounded border border-gray-700 bg-black px-4 py-2 text-white"
-                    required
-                />
+            <div style={{ background: "#f5f4f0", padding: "24px 32px", minHeight: 500 }}>
+                <div style={{ display: "flex", gap: 24, maxWidth: 1400, margin: "0 auto" }}>
+                    <AdminSidebar />
 
-                <textarea
-                    name="description"
-                    placeholder="Description"
-                    value={form.description}
-                    onChange={handleChange}
-                    className="rounded border border-gray-700 bg-black px-4 py-2 text-white"
-                    required
-                />
-
-                <input
-                    name="price"
-                    type="number"
-                    placeholder="Prix"
-                    value={form.price}
-                    onChange={handleChange}
-                    className="rounded border border-gray-700 bg-black px-4 py-2 text-white"
-                    required
-                />
-
-                <input
-                    name="stock"
-                    type="number"
-                    placeholder="Stock"
-                    value={form.stock}
-                    onChange={handleChange}
-                    className="rounded border border-gray-700 bg-black px-4 py-2 text-white"
-                    required
-                />
-
-                <select
-                    name="condition"
-                    value={form.condition}
-                    onChange={handleChange}
-                    className="rounded border border-gray-700 bg-black px-4 py-2 text-white"
-                >
-                    <option value="neuf">neuf</option>
-                    <option value="occasion">occasion</option>
-                </select>
-
-                <select
-                    name="category"
-                    value={form.category}
-                    onChange={handleChange}
-                    className="rounded border border-gray-700 bg-black px-4 py-2 text-white"
-                >
-                    <option value="camera">camera</option>
-                    <option value="objectif">objectif</option>
-                    <option value="micro">micro</option>
-                    <option value="accessoire">accessoire</option>
-                </select>
-
-                <div className="space-y-2">
-                    <label className="block text-sm font-medium">Image produit</label>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setFile(e.target.files?.[0] || null)}
-                        className="rounded border border-gray-700 bg-black px-4 py-2 text-white"
-                    />
-                </div>
-
-                <input
-                    name="imageUrl"
-                    placeholder="URL de l'image"
-                    value={form.imageUrl}
-                    onChange={handleChange}
-                    className="rounded border border-gray-700 bg-black px-4 py-2 text-white"
-                />
-
-                <div className="flex gap-4">
-                    <button
-                        type="submit"
-                        className="rounded bg-white px-4 py-2 font-semibold text-black"
-                    >
-                        {editingId ? "Modifier le produit" : "Ajouter le produit"}
-                    </button>
-
-                    {editingId && (
-                        <button
-                            type="button"
-                            onClick={resetForm}
-                            className="rounded border px-4 py-2"
-                        >
-                            Annuler
-                        </button>
-                    )}
-                </div>
-            </form>
-
-            <div className="grid gap-6">
-                {products.map((product) => (
-                    <article key={product.id} className="rounded-lg border p-4">
-                        <h2 className="text-xl font-bold">{product.name}</h2>
-                        <p className="text-gray-300">{product.description}</p>
-                        <p>Prix : {product.price} €</p>
-                        <p>Stock : {product.stock}</p>
-                        <p>Condition : {product.condition}</p>
-                        <p>Catégorie : {product.category}</p>
-
-                        {product.imageUrl && (
-                            <img
-                                src={product.imageUrl}
-                                alt={product.name}
-                                className="mt-4 h-40 rounded object-cover"
-                            />
+                    <div style={{ flex: 1 }}>
+                        {/* Formulaire ajout/modif */}
+                        {showForm && (
+                            <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 6, padding: 24, marginBottom: 24 }}>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                                    <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a2e" }}>
+                                        {editId ? "Modifier un produit" : "Ajouter un produit"}
+                                    </h2>
+                                    <button onClick={() => { setShowForm(false); setEditId(null); setForm(EMPTY); }}
+                                        style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "#888" }}>
+                                        ✕
+                                    </button>
+                                </div>
+                                <form onSubmit={handleSubmit}>
+                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+                                        <div>
+                                            <label className="px-label">Nom du produit</label>
+                                            <input className="px-input" value={form.name} onChange={set("name")} placeholder="Nom du produit" required />
+                                        </div>
+                                        <div>
+                                            <label className="px-label">Prix (€)</label>
+                                            <input className="px-input" type="number" value={form.price} onChange={set("price")} min={0} required />
+                                        </div>
+                                        <div>
+                                            <label className="px-label">Stock</label>
+                                            <input className="px-input" type="number" value={form.stock} onChange={set("stock")} min={0} required />
+                                        </div>
+                                        <div>
+                                            <label className="px-label">État</label>
+                                            <select className="px-input" value={form.condition} onChange={set("condition") as React.ChangeEventHandler<HTMLSelectElement>}>
+                                                <option value="neuf">Neuf</option>
+                                                <option value="occasion">Occasion</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="px-label">Catégorie</label>
+                                            <select className="px-input" value={form.category} onChange={set("category") as React.ChangeEventHandler<HTMLSelectElement>}>
+                                                <option value="camera">Caméra</option>
+                                                <option value="objectif">Objectif</option>
+                                                <option value="micro">Micro</option>
+                                                <option value="accessoire">Accessoire</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div style={{ marginBottom: 14 }}>
+                                        <label className="px-label">Description</label>
+                                        <textarea className="px-input" rows={3} value={form.description} onChange={set("description")} style={{ resize: "vertical" }} />
+                                    </div>
+                                    <div style={{ marginBottom: 20 }}>
+                                        <label className="px-label">Image</label>
+                                        <input className="px-input" value={form.imageUrl} onChange={set("imageUrl")} placeholder="https://... ou uploadez un fichier" style={{ marginBottom: 8 }} />
+                                        <input type="file" accept="image/*" onChange={handleImageUpload}
+                                            style={{ fontSize: 12, color: "#555" }} />
+                                        {uploading && <p style={{ fontSize: 11, color: "#888", marginTop: 4 }}>Upload en cours...</p>}
+                                        {form.imageUrl && (
+                                            <img src={form.imageUrl} alt="preview"
+                                                style={{ width: 80, height: 64, objectFit: "cover", borderRadius: 4, marginTop: 8 }} />
+                                        )}
+                                    </div>
+                                    <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                                        <button type="button" onClick={() => { setShowForm(false); setEditId(null); setForm(EMPTY); }}
+                                            className="px-btn px-btn-sm px-btn-outline">
+                                            Annuler
+                                        </button>
+                                        <button type="submit" disabled={loading} className="px-btn px-btn-red px-btn-sm">
+                                            {loading ? "Enregistrement..." : editId ? "Mettre à jour" : "Enregistrer"}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         )}
 
-                        <div className="mt-4 flex gap-4">
-                            <button
-                                onClick={() => handleEdit(product)}
-                                className="rounded bg-yellow-500 px-4 py-2 text-black"
-                            >
-                                Modifier
-                            </button>
+                        {/* Liste */}
+                        <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 6, overflow: "hidden" }}>
+                            <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a2e" }}>
+                                    Liste des Produits
+                                </h2>
+                                <button
+                                    onClick={() => { setShowForm(true); setEditId(null); setForm(EMPTY); }}
+                                    className="px-btn px-btn-red px-btn-sm"
+                                >
+                                    + Ajouter un produit
+                                </button>
+                            </div>
 
-                            <button
-                                onClick={() => handleDelete(product.id)}
-                                className="rounded bg-red-600 px-4 py-2 text-white"
-                            >
-                                Supprimer
-                            </button>
+                            <table className="px-table" style={{ borderRadius: 0, border: "none" }}>
+                                <thead>
+                                    <tr>
+                                        <th>Image</th>
+                                        <th>Nom</th>
+                                        <th>Prix</th>
+                                        <th>Stock</th>
+                                        <th>État</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {products.map((p) => (
+                                        <tr key={p.id}>
+                                            <td>
+                                                <div style={{
+                                                    background: "#e8e6de", width: 48, height: 40,
+                                                    borderRadius: 4, overflow: "hidden",
+                                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                                }}>
+                                                    {p.imageUrl
+                                                        ? <img src={p.imageUrl} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                                        : <span style={{ fontSize: 18 }}>📷</span>}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style={{ fontWeight: 700, fontSize: 13, color: "#1a1a2e" }}>{p.name}</div>
+                                                <div style={{ fontSize: 11, color: "#888", textTransform: "capitalize" }}>{p.category}</div>
+                                            </td>
+                                            <td style={{ fontWeight: 800, color: "#e63012" }}>
+                                                {p.price.toLocaleString("fr-FR")} €
+                                            </td>
+                                            <td>
+                                                <span style={{ color: p.stock === 0 ? "#c62828" : p.stock <= 2 ? "#e65100" : "#333", fontWeight: 600 }}>
+                                                    {p.stock}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span className={`px-badge ${p.condition === "neuf" ? "px-badge-new" : "px-badge-used"}`}>
+                                                    {p.condition === "neuf" ? "Neuf" : "Occasion"}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div style={{ display: "flex", gap: 8 }}>
+                                                    <button onClick={() => handleEdit(p)} className="px-btn px-btn-sm px-btn-outline">
+                                                        Modifier
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(p.id)}
+                                                        className="px-btn px-btn-sm"
+                                                        style={{ background: "transparent", border: "1px solid #e63012", color: "#e63012" }}
+                                                    >
+                                                        Supprimer
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {products.length === 0 && (
+                                <div style={{ padding: "48px 32px", textAlign: "center", color: "#888" }}>
+                                    Aucun produit. Cliquez sur "+ Ajouter un produit".
+                                </div>
+                            )}
                         </div>
-                    </article>
-                ))}
+                    </div>
+                </div>
             </div>
-        </main>
+        </>
     );
 }

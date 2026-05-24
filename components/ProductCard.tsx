@@ -1,46 +1,65 @@
-"use client";
-
 import Link from "next/link";
+import { Product } from "@/types/product";
 
-export default function ProductCard({ product }: any) {
+interface Props {
+    product: Product;
+}
+
+export default function ProductCard({ product }: Props) {
     return (
-        <article className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-
-            {/* IMAGE */}
-            <div className="mb-4 h-40 w-full overflow-hidden rounded-xl bg-slate-100">
+        <div className="px-product-card">
+            {/* Image */}
+            <div className="px-product-img">
                 {product.imageUrl ? (
                     <img
                         src={product.imageUrl}
                         alt={product.name}
-                        className="h-full w-full object-cover transition group-hover:scale-105"
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                 ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-slate-400">
-                        No image
-                    </div>
+                    <span style={{ fontSize: 40, color: "#bbb" }}>📷</span>
                 )}
             </div>
 
-            {/* INFOS */}
-            <h3 className="text-sm font-semibold text-[#1c1c24] line-clamp-2">
-                {product.name}
-            </h3>
+            {/* Body */}
+            <div className="px-product-body">
+                {/* Badge état */}
+                <span className={`px-badge ${product.condition === "neuf" ? "px-badge-new" : "px-badge-used"}`}>
+                    {product.condition === "neuf" ? "Neuf" : "Occasion"}
+                </span>
 
-            <p className="mt-1 text-xs text-slate-500 capitalize">
-                {product.category} • {product.condition}
-            </p>
+                {/* Nom */}
+                <div className="px-product-name">{product.name}</div>
 
-            <p className="mt-3 text-lg font-bold text-[#1c1c24]">
-                {product.price} €
-            </p>
+                {/* Catégorie */}
+                <div style={{ fontSize: 11, color: "#888", textTransform: "capitalize" }}>
+                    {product.category}
+                </div>
 
-            {/* CTA */}
-            <Link
-                href={`/product/${product.id}`}
-                className="mt-4 block w-full rounded-lg bg-[#4a3fb3] py-2 text-center text-sm font-semibold text-white transition hover:bg-[#3d3399]"
-            >
-                Voir le produit
-            </Link>
-        </article>
+                {/* Prix */}
+                <div className="px-product-price">{product.price.toLocaleString("fr-FR")} €</div>
+
+                {/* Stock */}
+                {product.stock <= 2 && product.stock > 0 && (
+                    <div style={{ fontSize: 11, color: "#e65100", fontWeight: 600 }}>
+                        Plus que {product.stock} en stock !
+                    </div>
+                )}
+                {product.stock === 0 && (
+                    <div style={{ fontSize: 11, color: "#c62828", fontWeight: 600 }}>
+                        Rupture de stock
+                    </div>
+                )}
+
+                {/* Bouton */}
+                <Link
+                    href={`/product/${product.id}`}
+                    className="px-btn px-btn-dark"
+                    style={{ marginTop: "auto", textAlign: "center" }}
+                >
+                    Consulter
+                </Link>
+            </div>
+        </div>
     );
 }
