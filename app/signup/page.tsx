@@ -23,6 +23,18 @@ export default function SignupPage() {
             setError("Les mots de passe ne correspondent pas.");
             return;
         }
+        if (password.length < 12) {
+            setError("Le mot de passe doit contenir au moins 12 caractères.");
+            return;
+        }
+        if (!/[A-Z]/.test(password)) {
+            setError("Le mot de passe doit contenir au moins une lettre majuscule.");
+            return;
+        }
+        if (!/[0-9]/.test(password)) {
+            setError("Le mot de passe doit contenir au moins un chiffre.");
+            return;
+        }
         setLoading(true);
         try {
             const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -67,7 +79,7 @@ export default function SignupPage() {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="votre@email.com"
+                                placeholder="Mail"
                                 required
                             />
                         </div>
@@ -78,7 +90,7 @@ export default function SignupPage() {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Min. 6 caractères"
+                                placeholder="Min. 12 caractères"
                                 required
                             />
                         </div>
@@ -89,7 +101,7 @@ export default function SignupPage() {
                                 type="password"
                                 value={confirm}
                                 onChange={(e) => setConfirm(e.target.value)}
-                                placeholder="Confirmer le mot de passe"
+                                placeholder="Confirmer le mot de passe, 1 majuscule, 1 chiffre"
                                 required
                             />
                         </div>
