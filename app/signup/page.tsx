@@ -90,7 +90,7 @@ export default function SignupPage() {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Min. 12 caractères"
+                                placeholder="Min. 12 caractères, 1 majuscule, 1 chiffre"
                                 required
                             />
                         </div>
@@ -101,7 +101,7 @@ export default function SignupPage() {
                                 type="password"
                                 value={confirm}
                                 onChange={(e) => setConfirm(e.target.value)}
-                                placeholder="Confirmer le mot de passe, 1 majuscule, 1 chiffre"
+                                placeholder="Confirmer le mot de passe"
                                 required
                             />
                         </div>
