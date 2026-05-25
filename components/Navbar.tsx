@@ -14,9 +14,9 @@ export default function Navbar() {
     const [user, setUser] = useState<{ email: string; isAdmin: boolean } | null>(null);
     const [cartCount, setCartCount] = useState(0);
     const [search, setSearch] = useState("");
+    const [menuOpen, setMenuOpen] = useState(false);
 
     useEffect(() => {
-        // Lecture panier dans un callback pour éviter setState synchrone dans l'effet
         const updateCart = () => {
             const cart = getCart();
             setCartCount(cart.reduce((t, i) => t + i.quantity, 0));
@@ -30,6 +30,10 @@ export default function Navbar() {
         });
         return () => unsub();
     }, []);
+
+    useEffect(() => {
+        setMenuOpen(false);
+    }, [pathname]);
 
     const handleSignOut = async () => {
         await signOut(auth);
@@ -102,7 +106,64 @@ export default function Navbar() {
                     <Link href="/cart" className="px-btn-cart">
                         Panier ({cartCount})
                     </Link>
+
+                    <button
+                        className="px-hamburger md:hidden"
+                        onClick={() => setMenuOpen(!menuOpen)}
+                        aria-label="Menu"
+                        aria-expanded={menuOpen}
+                    >
+                        <span style={{ transform: menuOpen ? "rotate(45deg) translate(5px, 5px)" : "none" }} />
+                        <span style={{ opacity: menuOpen ? 0 : 1 }} />
+                        <span style={{ transform: menuOpen ? "rotate(-45deg) translate(5px, -5px)" : "none" }} />
+                    </button>
                 </div>
+            </div>
+
+            <div className={`px-mobile-menu ${menuOpen ? "open" : ""}`}>
+                <Link href="/" className={isActive("/") && pathname === "/" ? "active" : ""}>
+                    🏠 Accueil
+                </Link>
+                <Link href="/catalogue" className={isActive("/catalogue") ? "active" : ""}>
+                    📷 Catalogue
+                </Link>
+                <Link href="/contact">
+                    ✉️ Contactez-nous
+                </Link>
+
+                <form onSubmit={handleSearch} style={{ padding: "4px 12px" }}>
+                    <input
+                        className="px-search"
+                        placeholder="Rechercher un produit..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        style={{ width: "100%", marginTop: 4 }}
+                    />
+                </form>
+
+                {user ? (
+                    <>
+                        {user.isAdmin && (
+                            <Link href="/admin" className={isActive("/admin") ? "active" : ""}>
+                                ⚙️ Back-office
+                            </Link>
+                        )}
+                        <Link href="/mon-compte">
+                            👤 Mon compte ({user.email})
+                        </Link>
+                        <button
+                            onClick={handleSignOut}
+                            style={{ background: "none", border: "none", color: "#c8c8dc", fontSize: 14, cursor: "pointer", padding: "10px 12px", textAlign: "left", borderRadius: 4 }}
+                        >
+                            🚪 Déconnexion
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <Link href="/login">🔑 Connexion</Link>
+                        <Link href="/signup">✨ Inscription</Link>
+                    </>
+                )}
             </div>
         </nav>
     );
