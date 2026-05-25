@@ -13,7 +13,6 @@ export default function ContactPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        // Simulation envoi — à remplacer par votre service email (Brevo, EmailJS, etc.)
         await new Promise((r) => setTimeout(r, 1000));
         setSent(true);
         setLoading(false);
@@ -26,17 +25,9 @@ export default function ContactPage() {
                 <p>Notre équipe vous répond du lundi au vendredi, 09h00–17h00</p>
             </div>
 
-            <div style={{ background: "#f5f4f0", padding: "40px 64px" }}>
-                <div style={{
-                    maxWidth: 1100,
-                    margin: "0 auto",
-                    display: "grid",
-                    gridTemplateColumns: "1fr 360px",
-                    gap: 32,
-                    alignItems: "start",
-                }}>
+            <div className="px-page-content">
+                <div className="px-contact-grid">
 
-                    {/* FORMULAIRE */}
                     <div style={{ background: "#fff", borderRadius: 6, border: "1px solid #eee", padding: 32 }}>
                         {sent ? (
                             <div style={{ textAlign: "center", padding: "40px 0" }}>
@@ -60,7 +51,7 @@ export default function ContactPage() {
                                     Envoyer un message
                                 </h2>
                                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                                    <div className="px-form-grid-2" style={{ display: "grid", gap: 14 }}>
                                         <div>
                                             <label className="px-label">Nom complet</label>
                                             <input
@@ -114,7 +105,7 @@ export default function ContactPage() {
                                             type="submit"
                                             disabled={loading}
                                             className="px-btn px-btn-red"
-                                            style={{ opacity: loading ? 0.7 : 1 }}
+                                            style={{ opacity: loading ? 0.7 : 1, width: "100%" }}
                                         >
                                             {loading ? "Envoi..." : "Envoyer le message →"}
                                         </button>
@@ -124,15 +115,10 @@ export default function ContactPage() {
                         )}
                     </div>
 
-                    {/* INFOS CONTACT */}
                     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-                        {/* Carte agence */}
                         <div style={{ background: "#1a1a2e", borderRadius: 6, padding: 24 }}>
-                            <div style={{
-                                fontSize: 11, fontWeight: 700, letterSpacing: 2,
-                                textTransform: "uppercase", color: "#e63012", marginBottom: 16,
-                            }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#e63012", marginBottom: 16 }}>
                                 Notre agence
                             </div>
                             {[
@@ -141,37 +127,20 @@ export default function ContactPage() {
                                 { icon: "✉️", title: "Email", text: "contact@pixloc.fr" },
                                 { icon: "🕐", title: "Horaires", text: "Lun – Ven\n09h00–12h00 / 14h00–17h00" },
                             ].map((info) => (
-                                <div key={info.title} style={{
-                                    display: "flex", gap: 14, marginBottom: 18,
-                                    paddingBottom: 18, borderBottom: "1px solid #2a2a42",
-                                }}>
-                                    <div style={{
-                                        width: 36, height: 36, background: "#2a2a42",
-                                        borderRadius: "50%", display: "flex",
-                                        alignItems: "center", justifyContent: "center",
-                                        fontSize: 16, flexShrink: 0,
-                                    }}>
+                                <div key={info.title} style={{ display: "flex", gap: 14, marginBottom: 18, paddingBottom: 18, borderBottom: "1px solid #2a2a42" }}>
+                                    <div style={{ width: 36, height: 36, background: "#2a2a42", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>
                                         {info.icon}
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: 11, fontWeight: 700, color: "#7a7a9a", marginBottom: 4 }}>
-                                            {info.title}
-                                        </div>
-                                        <div style={{ fontSize: 13, color: "#e0e0f0", whiteSpace: "pre-line" }}>
-                                            {info.text}
-                                        </div>
+                                        <div style={{ fontSize: 11, fontWeight: 700, color: "#7a7a9a", marginBottom: 4 }}>{info.title}</div>
+                                        <div style={{ fontSize: 13, color: "#e0e0f0", whiteSpace: "pre-line" }}>{info.text}</div>
                                     </div>
                                 </div>
                             ))}
-                            {/* Dernier item sans border */}
                         </div>
 
-                        {/* Réseaux sociaux */}
                         <div style={{ background: "#fff", borderRadius: 6, border: "1px solid #eee", padding: 20 }}>
-                            <div style={{
-                                fontSize: 11, fontWeight: 700, letterSpacing: 2,
-                                textTransform: "uppercase", color: "#888", marginBottom: 14,
-                            }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#888", marginBottom: 14 }}>
                                 Suivez-nous
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -180,26 +149,8 @@ export default function ContactPage() {
                                     { icon: "in", label: "Instagram", url: "https://instagram.com" },
                                     { icon: "▶", label: "YouTube", url: "https://youtube.com" },
                                 ].map((s) => (
-                                    <a
-                                        key={s.label}
-                                        href={s.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                            display: "flex", alignItems: "center", gap: 12,
-                                            textDecoration: "none", color: "#333",
-                                            fontSize: 13, fontWeight: 500,
-                                            padding: "8px 12px", borderRadius: 4,
-                                            border: "1px solid #eee",
-                                            transition: "all 0.15s",
-                                        }}
-                                    >
-                                        <div style={{
-                                            width: 28, height: 28, background: "#1a1a2e",
-                                            borderRadius: "50%", display: "flex",
-                                            alignItems: "center", justifyContent: "center",
-                                            color: "#fff", fontSize: 11, fontWeight: 700,
-                                        }}>
+                                    <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", color: "#333", fontSize: 13, fontWeight: 500, padding: "8px 12px", borderRadius: 4, border: "1px solid #eee" }}>
+                                        <div style={{ width: 28, height: 28, background: "#1a1a2e", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700 }}>
                                             {s.icon}
                                         </div>
                                         {s.label}

@@ -15,6 +15,14 @@ export default function Navbar() {
     const [cartCount, setCartCount] = useState(0);
     const [search, setSearch] = useState("");
     const [menuOpen, setMenuOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 768);
+        check();
+        window.addEventListener("resize", check);
+        return () => window.removeEventListener("resize", check);
+    }, []);
 
     useEffect(() => {
         const updateCart = () => {
@@ -32,7 +40,8 @@ export default function Navbar() {
     }, []);
 
     useEffect(() => {
-        setMenuOpen(false);
+        const close = () => setMenuOpen(false);
+        close();
     }, [pathname]);
 
     const handleSignOut = async () => {
@@ -107,64 +116,89 @@ export default function Navbar() {
                         Panier ({cartCount})
                     </Link>
 
-                    <button
-                        className="px-hamburger md:hidden"
-                        onClick={() => setMenuOpen(!menuOpen)}
-                        aria-label="Menu"
-                        aria-expanded={menuOpen}
-                    >
-                        <span style={{ transform: menuOpen ? "rotate(45deg) translate(5px, 5px)" : "none" }} />
-                        <span style={{ opacity: menuOpen ? 0 : 1 }} />
-                        <span style={{ transform: menuOpen ? "rotate(-45deg) translate(5px, -5px)" : "none" }} />
-                    </button>
+                    {isMobile && (
+                        <button
+                            onClick={() => setMenuOpen((prev) => !prev)}
+                            aria-label="Menu"
+                            aria-expanded={menuOpen}
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 5,
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: 4,
+                                flexShrink: 0,
+                            }}
+                        >
+                            <span style={{ display: "block", width: 22, height: 2, background: "#c8c8dc", borderRadius: 2, transition: "all 0.2s", transform: menuOpen ? "rotate(45deg) translate(5px, 5px)" : "none" }} />
+                            <span style={{ display: "block", width: 22, height: 2, background: "#c8c8dc", borderRadius: 2, transition: "all 0.2s", opacity: menuOpen ? 0 : 1 }} />
+                            <span style={{ display: "block", width: 22, height: 2, background: "#c8c8dc", borderRadius: 2, transition: "all 0.2s", transform: menuOpen ? "rotate(-45deg) translate(5px, -5px)" : "none" }} />
+                        </button>
+                    )}
                 </div>
             </div>
 
-            <div className={`px-mobile-menu ${menuOpen ? "open" : ""}`}>
-                <Link href="/" className={isActive("/") && pathname === "/" ? "active" : ""}>
-                    🏠 Accueil
-                </Link>
-                <Link href="/catalogue" className={isActive("/catalogue") ? "active" : ""}>
-                    📷 Catalogue
-                </Link>
-                <Link href="/contact">
-                    ✉️ Contactez-nous
-                </Link>
+            {isMobile && menuOpen && (
+                <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    background: "#1a1a2e",
+                    borderTop: "1px solid #2a2a42",
+                    padding: "12px 16px 16px",
+                    gap: 4,
+                }}>
+                    <Link href="/" style={{ color: pathname === "/" ? "#e63012" : "#c8c8dc", fontSize: 14, textDecoration: "none", padding: "10px 12px", borderRadius: 4 }}>
+                        🏠 Accueil
+                    </Link>
+                    <Link href="/catalogue" style={{ color: isActive("/catalogue") ? "#e63012" : "#c8c8dc", fontSize: 14, textDecoration: "none", padding: "10px 12px", borderRadius: 4 }}>
+                        📷 Catalogue
+                    </Link>
+                    <Link href="/contact" style={{ color: "#c8c8dc", fontSize: 14, textDecoration: "none", padding: "10px 12px", borderRadius: 4 }}>
+                        ✉️ Contactez-nous
+                    </Link>
 
-                <form onSubmit={handleSearch} style={{ padding: "4px 12px" }}>
-                    <input
-                        className="px-search"
-                        placeholder="Rechercher un produit..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        style={{ width: "100%", marginTop: 4 }}
-                    />
-                </form>
+                    {/* Recherche mobile */}
+                    <form onSubmit={handleSearch} style={{ padding: "4px 12px" }}>
+                        <input
+                            className="px-search"
+                            placeholder="Rechercher un produit..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            style={{ width: "100%", marginTop: 4 }}
+                        />
+                    </form>
 
-                {user ? (
-                    <>
-                        {user.isAdmin && (
-                            <Link href="/admin" className={isActive("/admin") ? "active" : ""}>
-                                ⚙️ Back-office
+                    {user ? (
+                        <>
+                            {user.isAdmin && (
+                                <Link href="/admin" style={{ color: isActive("/admin") ? "#e63012" : "#c8c8dc", fontSize: 14, textDecoration: "none", padding: "10px 12px", borderRadius: 4 }}>
+                                    ⚙️ Back-office
+                                </Link>
+                            )}
+                            <Link href="/mon-compte" style={{ color: "#c8c8dc", fontSize: 14, textDecoration: "none", padding: "10px 12px", borderRadius: 4 }}>
+                                👤 Mon compte
                             </Link>
-                        )}
-                        <Link href="/mon-compte">
-                            👤 Mon compte ({user.email})
-                        </Link>
-                        <button
-                            onClick={handleSignOut}
-                            style={{ background: "none", border: "none", color: "#c8c8dc", fontSize: 14, cursor: "pointer", padding: "10px 12px", textAlign: "left", borderRadius: 4 }}
-                        >
-                            🚪 Déconnexion
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        <Link href="/login">🔑 Connexion</Link>
-                        <Link href="/signup">✨ Inscription</Link>
-                    </>
-                )}
-            </div>
+                            <button
+                                onClick={handleSignOut}
+                                style={{ background: "none", border: "none", color: "#c8c8dc", fontSize: 14, cursor: "pointer", padding: "10px 12px", textAlign: "left", borderRadius: 4 }}
+                            >
+                                🚪 Déconnexion
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <Link href="/login" style={{ color: "#c8c8dc", fontSize: 14, textDecoration: "none", padding: "10px 12px", borderRadius: 4 }}>
+                                🔑 Connexion
+                            </Link>
+                            <Link href="/signup" style={{ color: "#c8c8dc", fontSize: 14, textDecoration: "none", padding: "10px 12px", borderRadius: 4 }}>
+                                ✨ Inscription
+                            </Link>
+                        </>
+                    )}
+                </div>
+            )}
         </nav>
     );
 }

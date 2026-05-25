@@ -17,6 +17,14 @@ export default function MonComptePage() {
     const [loading, setLoading] = useState(true);
     const [resetSent, setResetSent] = useState(false);
     const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 768);
+        check();
+        window.addEventListener("resize", check);
+        return () => window.removeEventListener("resize", check);
+    }, []);
 
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, async (u) => {
@@ -73,25 +81,42 @@ export default function MonComptePage() {
                 <p>{profile?.email}</p>
             </div>
 
-            <div style={{ background: "#f5f4f0", padding: "24px 64px", minHeight: 400 }}>
-                <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "180px 1fr", gap: 24 }}>
+            <div className="px-page-content">
+                <div style={{
+                    maxWidth: 1200,
+                    margin: "0 auto",
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "1fr" : "180px 1fr",
+                    gap: isMobile ? 16 : 24,
+                }}>
 
-                    <aside className="px-admin-sidebar">
-                        <div className="px-admin-link active" style={{ cursor: "default" }}>Mon compte</div>
-                        <div className="px-admin-link" style={{ cursor: "default" }}>Commandes</div>
-                        <div style={{ height: 1, background: "#f0f0f0", margin: "4px 0" }} />
+                    <aside className="px-admin-sidebar" style={isMobile ? {
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "row",
+                        overflowX: "auto",
+                        padding: 6,
+                        gap: 4,
+                    } : {}}>
+                        <div className="px-admin-link active" style={{ cursor: "default", whiteSpace: "nowrap" }}>Mon compte</div>
+                        <div className="px-admin-link" style={{ cursor: "default", whiteSpace: "nowrap" }}>Commandes</div>
+                        {!isMobile && <div style={{ height: 1, background: "#f0f0f0", margin: "4px 0" }} />}
                         <button
                             onClick={handleSignOut}
                             className="px-admin-link"
-                            style={{ width: "100%", textAlign: "left", border: "none", cursor: "pointer", background: "transparent" }}
+                            style={{ width: isMobile ? "auto" : "100%", textAlign: "left", border: "none", cursor: "pointer", background: "transparent", whiteSpace: "nowrap" }}
                         >
                             Déconnexion
                         </button>
                     </aside>
 
                     <div>
-                        {/* Stats */}
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 24 }}>
+                        <div style={{
+                            display: "grid",
+                            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+                            gap: 14,
+                            marginBottom: 24,
+                        }}>
                             {[
                                 { label: "Commandes passées", value: String(orders.length) },
                                 { label: "Total dépensé", value: `${totalSpent.toLocaleString("fr-FR")} €` },
@@ -104,7 +129,6 @@ export default function MonComptePage() {
                             ))}
                         </div>
 
-                        {/* Commandes */}
                         <div style={{ background: "#fff", borderRadius: 6, border: "1px solid #eee", overflow: "hidden", marginBottom: 16 }}>
                             <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0" }}>
                                 <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a2e" }}>Liste de vos commandes</h2>
@@ -127,12 +151,29 @@ export default function MonComptePage() {
                                             <div key={order.id} style={{ borderBottom: "1px solid #f5f5f5" }}>
                                                 <div
                                                     onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
-                                                    style={{ display: "grid", gridTemplateColumns: "130px 1fr auto auto 130px", alignItems: "center", gap: 16, padding: "14px 20px", cursor: "pointer" }}
+                                                    style={{
+                                                        display: "grid",
+                                                        gridTemplateColumns: isMobile ? "1fr auto" : "130px 1fr auto auto 130px",
+                                                        alignItems: "center",
+                                                        gap: isMobile ? 8 : 16,
+                                                        padding: isMobile ? "12px 16px" : "14px 20px",
+                                                        cursor: "pointer",
+                                                    }}
                                                 >
-                                                    <div style={{ fontFamily: "monospace", fontSize: 11, color: "#aaa" }}>#{order.id.slice(0, 8)}</div>
 
-                                                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                                                        {items.slice(0, 3).map((item, i) => (
+                                                    {!isMobile && (
+                                                        <div style={{ fontFamily: "monospace", fontSize: 11, color: "#aaa" }}>
+                                                            #{order.id.slice(0, 8)}
+                                                        </div>
+                                                    )}
+
+                                                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", minWidth: 0 }}>
+                                                        {isMobile && (
+                                                            <div style={{ fontSize: 11, fontFamily: "monospace", color: "#aaa", marginBottom: 2 }}>
+                                                                #{order.id.slice(0, 8)} · {formatDate(order.createdAt)}
+                                                            </div>
+                                                        )}
+                                                        {items.slice(0, isMobile ? 1 : 3).map((item, i) => (
                                                             <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                                                 <div style={{ width: 36, height: 30, borderRadius: 3, background: "#e8e6de", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                                                                     {item.product?.imageUrl ? (
@@ -142,54 +183,70 @@ export default function MonComptePage() {
                                                                         <span style={{ fontSize: 14 }}>📷</span>
                                                                     )}
                                                                 </div>
-                                                                <span style={{ fontSize: 12, color: "#333", fontWeight: 500, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                                <span style={{ fontSize: 12, color: "#333", fontWeight: 500, maxWidth: isMobile ? 140 : 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                                                     {item.product?.name ?? "Produit"}
                                                                 </span>
                                                                 {item.quantity > 1 && <span style={{ fontSize: 11, color: "#888" }}>×{item.quantity}</span>}
                                                             </div>
                                                         ))}
-                                                        {items.length > 3 && (
+                                                        {items.length > (isMobile ? 1 : 3) && (
                                                             <span style={{ fontSize: 11, color: "#888", background: "#f5f4f0", padding: "2px 8px", borderRadius: 10 }}>
-                                                                +{items.length - 3} autre{items.length - 3 > 1 ? "s" : ""}
+                                                                +{items.length - (isMobile ? 1 : 3)} autre{items.length - (isMobile ? 1 : 3) > 1 ? "s" : ""}
                                                             </span>
                                                         )}
                                                     </div>
 
-                                                    <span className="px-badge" style={{ background: s.bg, color: s.color, fontSize: 11, whiteSpace: "nowrap" }}>{s.label}</span>
-                                                    <div style={{ fontWeight: 800, color: "#e63012", fontSize: 15, whiteSpace: "nowrap" }}>{order.amount?.toLocaleString("fr-FR")} &euro;</div>
-                                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-                                                        <span style={{ fontSize: 12, color: "#888" }}>{formatDate(order.createdAt)}</span>
+                                                    {!isMobile && (
+                                                        <span className="px-badge" style={{ background: s.bg, color: s.color, fontSize: 11, whiteSpace: "nowrap" }}>{s.label}</span>
+                                                    )}
+
+                                                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                                                        <div style={{ fontWeight: 800, color: "#e63012", fontSize: 15, whiteSpace: "nowrap" }}>
+                                                            {order.amount?.toLocaleString("fr-FR")} &euro;
+                                                        </div>
+                                                        {isMobile && (
+                                                            <span className="px-badge" style={{ background: s.bg, color: s.color, fontSize: 10 }}>{s.label}</span>
+                                                        )}
+                                                        {!isMobile && (
+                                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
+                                                                <span style={{ fontSize: 12, color: "#888" }}>{formatDate(order.createdAt)}</span>
+                                                            </div>
+                                                        )}
                                                         <span style={{ fontSize: 14, color: "#aaa", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s", display: "inline-block" }}>▾</span>
                                                     </div>
                                                 </div>
 
                                                 {isExpanded && (
-                                                    <div style={{ background: "#f5f4f0", borderTop: "1px solid #eee", padding: "16px 20px" }}>
+                                                    <div style={{ background: "#f5f4f0", borderTop: "1px solid #eee", padding: isMobile ? "12px 16px" : "16px 20px" }}>
                                                         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#888", marginBottom: 12 }}>
-                                                            Détail de la commande #{order.id.slice(0, 8)}
+                                                            Détail #{order.id.slice(0, 8)}
                                                         </div>
                                                         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                                             {items.map((item, i) => (
-                                                                <div key={i} style={{ background: "#fff", borderRadius: 4, border: "1px solid #eee", padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
-                                                                    <div style={{ width: 56, height: 46, borderRadius: 4, background: "#e8e6de", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                                                <div key={i} style={{ background: "#fff", borderRadius: 4, border: "1px solid #eee", padding: isMobile ? "10px 12px" : "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                                                                    <div style={{ width: isMobile ? 44 : 56, height: isMobile ? 36 : 46, borderRadius: 4, background: "#e8e6de", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                                                                         {item.product?.imageUrl ? (
                                                                             // eslint-disable-next-line @next/next/no-img-element
                                                                             <img src={item.product.imageUrl} alt={item.product?.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                                                                         ) : (
-                                                                            <span style={{ fontSize: 22 }}>📷</span>
+                                                                            <span style={{ fontSize: 20 }}>📷</span>
                                                                         )}
                                                                     </div>
-                                                                    <div style={{ flex: 1 }}>
-                                                                        <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a2e", marginBottom: 4 }}>{item.product?.name ?? "Produit supprimé"}</div>
+                                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                                        <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a2e", marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                                            {item.product?.name ?? "Produit supprimé"}
+                                                                        </div>
                                                                         {item.product?.condition && (
                                                                             <span className={`px-badge ${item.product.condition === "neuf" ? "px-badge-new" : "px-badge-used"}`} style={{ fontSize: 10 }}>
                                                                                 {item.product.condition === "neuf" ? "Neuf" : "Occasion"}
                                                                             </span>
                                                                         )}
                                                                     </div>
-                                                                    <div style={{ fontSize: 12, color: "#888", whiteSpace: "nowrap" }}>Qté : <strong style={{ color: "#333" }}>{item.quantity}</strong></div>
-                                                                    <div style={{ fontSize: 14, fontWeight: 800, color: "#1a1a2e", whiteSpace: "nowrap" }}>
-                                                                        {((item.product?.price ?? 0) * item.quantity).toLocaleString("fr-FR")} &euro;
+                                                                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                                                        <div style={{ fontSize: 12, color: "#888" }}>×{item.quantity}</div>
+                                                                        <div style={{ fontSize: 13, fontWeight: 800, color: "#1a1a2e" }}>
+                                                                            {((item.product?.price ?? 0) * item.quantity).toLocaleString("fr-FR")} &euro;
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -207,13 +264,14 @@ export default function MonComptePage() {
                             )}
                         </div>
 
-                        {/* Reset password */}
                         <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 6, padding: 20 }}>
                             <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a2e", marginBottom: 10 }}>Sécurité du compte</div>
                             {resetSent ? (
                                 <p style={{ fontSize: 12, color: "#2e7d32" }}>✓ Email de réinitialisation envoyé à {profile?.email}</p>
                             ) : (
-                                <button onClick={handleReset} className="px-btn px-btn-sm px-btn-outline">Réinitialiser mon mot de passe</button>
+                                <button onClick={handleReset} className="px-btn px-btn-sm px-btn-outline">
+                                    Réinitialiser mon mot de passe
+                                </button>
                             )}
                         </div>
                     </div>

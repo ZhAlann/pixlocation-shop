@@ -87,7 +87,7 @@ export default function AdminProductsPage() {
             <div className="px-admin-header"><h1>Dashboard Admin</h1></div>
 
             <div style={{ background: "#f5f4f0", padding: "24px 32px", minHeight: 500 }}>
-                <div style={{ display: "flex", gap: 24, maxWidth: 1400, margin: "0 auto" }}>
+                <div className="px-admin-layout">
 
                     <aside className="px-admin-sidebar">
                         <Link href="/admin/products" className="px-admin-link active">Produit</Link>
@@ -131,7 +131,6 @@ export default function AdminProductsPage() {
                                         <input type="file" accept="image/*" onChange={handleImageUpload} style={{ fontSize: 12, color: "#555" }} />
                                         {uploading && <p style={{ fontSize: 11, color: "#888", marginTop: 4 }}>Upload en cours...</p>}
                                         {form.imageUrl && (
-                                            // eslint-disable-next-line @next/next/no-img-element
                                             <img src={form.imageUrl} alt="preview" style={{ width: 80, height: 64, objectFit: "cover", borderRadius: 4, marginTop: 8 }} />
                                         )}
                                     </div>
@@ -158,7 +157,6 @@ export default function AdminProductsPage() {
                                             <td>
                                                 <div style={{ background: "#e8e6de", width: 48, height: 40, borderRadius: 4, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                                     {p.imageUrl
-                                                        // eslint-disable-next-line @next/next/no-img-element
                                                         ? <img src={p.imageUrl} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                                                         : <span style={{ fontSize: 18 }}>📷</span>}
                                                 </div>

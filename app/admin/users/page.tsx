@@ -57,7 +57,7 @@ export default function AdminUsersPage() {
             </div>
 
             <div style={{ background: "#f5f4f0", padding: "24px 32px", minHeight: 500 }}>
-                <div style={{ display: "flex", gap: 24, maxWidth: 1400, margin: "0 auto" }}>
+                <div className="px-admin-layout">
 
                     {/* SIDEBAR */}
                     <aside className="px-admin-sidebar">

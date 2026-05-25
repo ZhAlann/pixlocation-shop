@@ -45,7 +45,7 @@ export default function CartPage() {
                 <p>{cart.length} article{cart.length > 1 ? "s" : ""} &mdash; Total : {total.toLocaleString("fr-FR")} &euro;</p>
             </div>
 
-            <div style={{ background: "#f5f4f0", padding: "24px 64px", minHeight: 400 }}>
+            <div className="px-page-content">
                 {cart.length === 0 ? (
                     <div style={{ background: "#fff", borderRadius: 6, border: "1px solid #eee", padding: "80px 32px", textAlign: "center" }}>
                         <div style={{ fontSize: 48, marginBottom: 16 }}>🛒</div>
@@ -54,7 +54,7 @@ export default function CartPage() {
                         <Link href="/catalogue" className="px-btn px-btn-red">Voir le catalogue</Link>
                     </div>
                 ) : (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 24, maxWidth: 1200, margin: "0 auto" }}>
+                    <div className="px-cart-grid">
                         <div>
                             <table className="px-table">
                                 <thead>

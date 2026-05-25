@@ -91,19 +91,17 @@ export default function CheckoutPage() {
                 <p>Étape 2/2 — Informations de livraison et paiement</p>
             </div>
 
-            <div style={{ background: "#f5f4f0", padding: "24px 64px" }}>
+            <div className="px-page-content">
                 <form onSubmit={handleSubmit}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 24, maxWidth: 1200, margin: "0 auto" }}>
+                    <div className="px-checkout-grid">
 
-                        {/* ── FORMULAIRE ── */}
                         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-                            {/* Infos personnelles */}
                             <div style={{ background: "#fff", borderRadius: 6, border: "1px solid #eee", padding: 24 }}>
                                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#888", marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid #f0f0f0" }}>
                                     Informations personnelles
                                 </div>
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+                                <div className="px-form-grid-2" style={{ display: "grid", gap: 14, marginBottom: 14 }}>
                                     <div>
                                         <label style={labelStyle}>Nom</label>
                                         <input
@@ -140,7 +138,6 @@ export default function CheckoutPage() {
                                 </div>
                             </div>
 
-                            {/* Adresse de livraison */}
                             <div style={{ background: "#fff", borderRadius: 6, border: "1px solid #eee", padding: 24 }}>
                                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#888", marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid #f0f0f0" }}>
                                     Adresse de livraison
