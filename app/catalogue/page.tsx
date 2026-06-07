@@ -1,6 +1,8 @@
 import { getProducts } from "@/lib/products";
 import CatalogueClient from "@/components/CatalogueClient";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
     title: "Catalogue — PixShop",
     description: "Parcourez notre catalogue de matériel audiovisuel neuf et occasion.",
