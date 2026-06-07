@@ -53,7 +53,6 @@ export default function AdminPage() {
       <div style={{ background: "#f5f4f0", padding: "24px 32px", minHeight: 500 }}>
         <div className="px-admin-layout">
 
-          {/* SIDEBAR */}
           <aside className="px-admin-sidebar">
             <Link href="/admin/products" className="px-admin-link">Produit</Link>
             <Link href="/admin" className="px-admin-link active">Commande</Link>
@@ -61,7 +60,6 @@ export default function AdminPage() {
           </aside>
 
           <div style={{ flex: 1 }}>
-            {/* Stats */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
               {[
                 { label: "Total commandes", value: String(orders.length), color: "#1a1a2e" },
@@ -76,7 +74,6 @@ export default function AdminPage() {
               ))}
             </div>
 
-            {/* Table commandes */}
             <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 6, overflow: "hidden" }}>
               <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0" }}>
                 <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a2e" }}>Liste des Commandes</h2>

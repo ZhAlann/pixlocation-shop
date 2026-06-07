@@ -59,17 +59,14 @@ export default function AdminUsersPage() {
             <div style={{ background: "#f5f4f0", padding: "24px 32px", minHeight: 500 }}>
                 <div className="px-admin-layout">
 
-                    {/* SIDEBAR */}
                     <aside className="px-admin-sidebar">
                         <Link href="/admin/products" className="px-admin-link">Produit</Link>
                         <Link href="/admin" className="px-admin-link">Commande</Link>
                         <Link href="/admin/users" className="px-admin-link active">Comptes client</Link>
                     </aside>
 
-                    {/* CONTENU */}
                     <div style={{ flex: 1 }}>
 
-                        {/* Stats */}
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 24 }}>
                             {[
                                 { label: "Total utilisateurs", value: users.length, color: "#1a1a2e" },
@@ -90,9 +87,7 @@ export default function AdminUsersPage() {
                             ))}
                         </div>
 
-                        {/* Table utilisateurs */}
                         <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 6, overflow: "hidden" }}>
-                            {/* Header + search */}
                             <div style={{
                                 padding: "16px 20px", borderBottom: "1px solid #f0f0f0",
                                 display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16,
@@ -134,7 +129,6 @@ export default function AdminUsersPage() {
                                     <tbody>
                                         {filtered.map((u) => (
                                             <tr key={u.id}>
-                                                {/* Avatar + nom */}
                                                 <td>
                                                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                                         <div style={{
@@ -158,19 +152,16 @@ export default function AdminUsersPage() {
                                                     </div>
                                                 </td>
 
-                                                {/* Email */}
                                                 <td style={{ fontSize: 12, color: "#555" }}>
                                                     {u.email ?? "—"}
                                                 </td>
 
-                                                {/* Adresse */}
                                                 <td style={{ fontSize: 12, color: "#888" }}>
                                                     {u.city
                                                         ? `${u.city}${u.postalCode ? ` (${u.postalCode})` : ""}`
                                                         : "—"}
                                                 </td>
 
-                                                {/* Rôle */}
                                                 <td>
                                                     <span className="px-badge" style={{
                                                         background: u.role === "admin" ? "#fce4e4" : "#e8f5e9",
@@ -181,7 +172,6 @@ export default function AdminUsersPage() {
                                                     </span>
                                                 </td>
 
-                                                {/* Actions */}
                                                 <td>
                                                     <div style={{ display: "flex", gap: 8 }}>
                                                         <button

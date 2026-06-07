@@ -52,7 +52,6 @@ export default async function ProductPage({
                                 <span style={{ fontSize: 80, color: "#ccc" }}>📷</span>
                             )}
                         </div>
-                        {/* Thumbnails placeholder */}
                         <div style={{ display: "flex", gap: 8 }}>
                             {[1, 2, 3].map((i) => (
                                 <div key={i} style={{

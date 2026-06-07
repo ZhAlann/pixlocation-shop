@@ -9,6 +9,7 @@ import { getUser } from "@/lib/users";
 import { Order, OrderItem } from "@/types/order";
 import { UserProfile } from "@/types/user";
 import Link from "next/link";
+import { saveUserProfile } from "@/lib/users";
 
 export default function MonComptePage() {
     const router = useRouter();
@@ -18,6 +19,18 @@ export default function MonComptePage() {
     const [resetSent, setResetSent] = useState(false);
     const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [savingProfile, setSavingProfile] = useState(false);
+    const [profileMessage, setProfileMessage] = useState("");
+
+    const [profileForm, setProfileForm] = useState({
+        firstName: "",
+        lastName: "",
+        address: "",
+        city: "",
+        postalCode: "",
+        country: "",
+        phone: "",
+    });
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 768);
@@ -32,11 +45,50 @@ export default function MonComptePage() {
             const [o, p] = await Promise.all([getOrdersByUserId(u.uid), getUser(u.uid)]);
             setOrders(o);
             setProfile(p);
+            if (p) {
+                setProfileForm({
+                    firstName: p.firstName ?? "",
+                    lastName: p.lastName ?? "",
+                    address: p.address ?? "",
+                    city: p.city ?? "",
+                    postalCode: p.postalCode ?? "",
+                    country: p.country ?? "",
+                    phone: p.phone ?? "",
+                });
+            }
             setLoading(false);
         });
         return () => unsub();
     }, [router]);
 
+    const handleSaveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if (!auth.currentUser || !profile) return;
+
+        try {
+            setSavingProfile(true);
+            setProfileMessage("");
+
+            await saveUserProfile(
+                auth.currentUser.uid,
+                profileForm,
+                profile.email
+            );
+
+            setProfile({
+                ...profile,
+                ...profileForm,
+            });
+
+            setProfileMessage("Profil mis à jour avec succès.");
+        } catch (error) {
+            console.error(error);
+            setProfileMessage("Erreur lors de la mise à jour du profil.");
+        } finally {
+            setSavingProfile(false);
+        }
+    };
     const handleReset = async () => {
         if (!auth.currentUser?.email) return;
         await sendPasswordResetEmail(auth, auth.currentUser.email);
@@ -263,7 +315,193 @@ export default function MonComptePage() {
                                 </div>
                             )}
                         </div>
+                        <section
+                            className="px-card"
+                            style={{
+                                marginBottom: 32,
+                                padding: 24,
+                                borderRadius: 16,
+                                border: "1px solid #e5e7eb",
+                                background: "#ffffff",
+                            }}
+                        >
+                            <div style={{ marginBottom: 24 }}>
+                                <h2
+                                    style={{
+                                        fontSize: 24,
+                                        fontWeight: 700,
+                                        marginBottom: 8,
+                                    }}
+                                >
+                                    Modifier mes informations
+                                </h2>
 
+                                <p
+                                    style={{
+                                        color: "#6b7280",
+                                        fontSize: 14,
+                                    }}
+                                >
+                                    Mettez à jour vos informations personnelles.
+                                </p>
+                            </div>
+
+                            <form
+                                onSubmit={handleSaveProfile}
+                                style={{
+                                    display: "grid",
+                                    gap: 16,
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        display: "grid",
+                                        gridTemplateColumns: "1fr 1fr",
+                                        gap: 16,
+                                    }}
+                                >
+                                    <input
+                                        type="text"
+                                        placeholder="Prénom"
+                                        value={profileForm.firstName}
+                                        onChange={(e) =>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                firstName: e.target.value,
+                                            })
+                                        }
+                                        className="px-input"
+                                    />
+
+                                    <input
+                                        type="text"
+                                        placeholder="Nom"
+                                        value={profileForm.lastName}
+                                        onChange={(e) =>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                lastName: e.target.value,
+                                            })
+                                        }
+                                        className="px-input"
+                                    />
+                                </div>
+
+                                <input
+                                    type="text"
+                                    placeholder="Téléphone"
+                                    value={profileForm.phone}
+                                    onChange={(e) =>
+                                        setProfileForm({
+                                            ...profileForm,
+                                            phone: e.target.value,
+                                        })
+                                    }
+                                    className="px-input"
+                                />
+
+                                <input
+                                    type="text"
+                                    placeholder="Adresse"
+                                    value={profileForm.address}
+                                    onChange={(e) =>
+                                        setProfileForm({
+                                            ...profileForm,
+                                            address: e.target.value,
+                                        })
+                                    }
+                                    className="px-input"
+                                />
+
+                                <div
+                                    style={{
+                                        display: "grid",
+                                        gridTemplateColumns: "1fr 180px",
+                                        gap: 16,
+                                    }}
+                                >
+                                    <input
+                                        type="text"
+                                        placeholder="Ville"
+                                        value={profileForm.city}
+                                        onChange={(e) =>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                city: e.target.value,
+                                            })
+                                        }
+                                        className="px-input"
+                                    />
+
+                                    <input
+                                        type="text"
+                                        placeholder="Code postal"
+                                        value={profileForm.postalCode}
+                                        onChange={(e) =>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                postalCode: e.target.value,
+                                            })
+                                        }
+                                        className="px-input"
+                                    />
+                                </div>
+
+                                <input
+                                    type="text"
+                                    placeholder="Pays"
+                                    value={profileForm.country}
+                                    onChange={(e) =>
+                                        setProfileForm({
+                                            ...profileForm,
+                                            country: e.target.value,
+                                        })
+                                    }
+                                    className="px-input"
+                                />
+
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 16,
+                                        marginTop: 8,
+                                    }}
+                                >
+                                    <button
+                                        type="submit"
+                                        disabled={savingProfile}
+                                        style={{
+                                            background: "#e63012",
+                                            color: "#fff",
+                                            border: "none",
+                                            padding: "12px 20px",
+                                            borderRadius: 10,
+                                            fontWeight: 600,
+                                            cursor: "pointer",
+                                            transition: "0.2s ease",
+                                        }}
+                                    >
+                                        {savingProfile
+                                            ? "Enregistrement..."
+                                            : "Enregistrer les modifications"}
+                                    </button>
+
+                                    {profileMessage && (
+                                        <p
+                                            style={{
+                                                fontSize: 14,
+                                                color: profileMessage.includes("Erreur")
+                                                    ? "#dc2626"
+                                                    : "#16a34a",
+                                            }}
+                                        >
+                                            {profileMessage}
+                                        </p>
+                                    )}
+                                </div>
+                            </form>
+                        </section>
                         <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 6, padding: 20 }}>
                             <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a2e", marginBottom: 10 }}>Sécurité du compte</div>
                             {resetSent ? (

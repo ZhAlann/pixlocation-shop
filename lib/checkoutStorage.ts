@@ -1,7 +1,3 @@
-// lib/checkoutStorage.ts
-// Persiste les données de livraison entre /checkout et /success
-// via localStorage, car la redirection Stripe fait quitter l'application
-
 import { ShippingData } from "@/types/checkout";
 
 const SHIPPING_KEY = "pixlocation_shipping";
